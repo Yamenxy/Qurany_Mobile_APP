@@ -1,0 +1,11 @@
+Reference Text (with Tashkeel):
+بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَّهُۥ كُفُوًا أَحَدٌ
+
+Predicted Text (with Tashkeel):
+بسم الله الرحمن الرحيم كل الله أعطو بصمتنا لدى المدينة ودى الميكلة وكفنا أحدنا
+
+Similarity WITH Tashkeel: 43.24%
+Similarity WITHOUT Tashkeel: 61.35%
+Total Words: 19
+Matched Words: 5
+Mistakes: 14
