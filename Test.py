@@ -13,7 +13,7 @@ model = whisper.load_model("medium")  # 'large' gives better accuracy but slower
 # -------------------------------
 print("Transcribing audio...")
 result = model.transcribe(
-    "B:/Workspace/Qurany/repeat.dat.mp3",
+    "B:/Workspace/Qurany/mistakes.dat (online-audio-converter.com).mp3",
     language="ar",           
     task="transcribe",      
     initial_prompt="يتحدث باللغة العربية الفصحى",

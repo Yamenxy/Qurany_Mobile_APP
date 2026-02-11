@@ -2,9 +2,9 @@ Reference Text:
 بسم الله الرحمن الرحيم قل هو الله أحد الله الصمد لم يلد ولم يولد ولم يكن له كفوا أحد
 
 Predicted Text:
-بسم الله الرحمن الرحيم قل هو الله أحد الله الصمد لم يلد ولم يولد ولم يكن له كفوا أحد
+بسم الله رب العالمين قل هو الله أحد الله الصمد لم يلد ولم يولد ولم يكن له قفوا أحد
 
-Similarity Score: 100.00%
+Similarity Score: 85.54%
 Total Words: 19
-Matched Words: 19
-Mistakes: 0
+Matched Words: 16
+Mistakes: 3
