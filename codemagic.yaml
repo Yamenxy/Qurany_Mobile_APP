@@ -1,0 +1,114 @@
+workflows:
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - ios_credentials  # Create this group in Codemagic UI
+      vars:
+        BUNDLE_ID: "com.qurany.quranyApp"
+        APP_STORE_APPLE_ID: "YOUR_APP_STORE_ID"  # Replace after creating app in App Store Connect
+      ios_signing:
+        distribution_type: ad_hoc  # Use 'app_store' for App Store builds
+        bundle_identifier: com.qurany.quranyApp
+    
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Set up local properties
+        script: |
+          echo "Working directory: $(pwd)"
+          
+      - name: Get Flutter packages
+        script: |
+          cd flutter_app
+          flutter pub get
+          
+      - name: Install CocoaPods dependencies
+        script: |
+          cd flutter_app/ios
+          pod install || pod install --repo-update
+          
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_ADHOC \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+        working_directory: flutter_app
+          
+      - name: Build IPA
+        script: |
+          cd flutter_app
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+          
+    artifacts:
+      - flutter_app/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_app/flutter_drive.log
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com  # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  ios-debug:
+    name: iOS Debug Build (No Signing)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd flutter_app
+          flutter pub get
+          
+      - name: Install CocoaPods dependencies
+        script: |
+          cd flutter_app/ios
+          pod install || pod install --repo-update
+          
+      - name: Build iOS (no codesign)
+        script: |
+          cd flutter_app
+          flutter build ios --release --no-codesign
+          
+    artifacts:
+      - flutter_app/build/ios/iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com  # Replace with your email
+        notify:
+          success: true
+          failure: true
