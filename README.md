@@ -1,5 +1,7 @@
 # Qurany — Whisper-based Arabic Transcription
 
+Note: Some files in this repository are generated or auxiliary and are not important for review.
+
 This small project demonstrates using OpenAI's Whisper (openai-whisper) in Python to:
 - Preprocess audio (noise reduction),
 - Transcribe Arabic audio accurately using a tuned Whisper configuration,
