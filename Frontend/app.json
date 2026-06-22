@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Qurany",
+    "slug": "qurany",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0D1F17"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": false,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.qurany.app"
+    },
+    "android": {
+      "package": "com.qurany.app",
+      "permissions": [
+        "INTERNET",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    }
+  }
+}
