@@ -9,105 +9,80 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography, GlobalStyles, BorderRadius } from '../config/theme';
-import { BottomSheet, Button } from '../components';
+import { BottomSheet, Button, QiraaSelector } from '../components';
 import {
   ChevronLeft,
   ChevronRight,
   Bookmark,
-  Share2,
-  Settings,
   Play,
-  Info,
+  Mic,
+  Eye,
+  EyeOff,
 } from 'lucide-react-native';
 
-interface Verse {
-  ayah: number;
-  text: string;
-  translation: string;
-}
+// Import our pre-processed JSON layout
+import quranLayoutData from '../../assets/data/quran_isra_layout.json';
 
-interface QuranPage {
-  surah: number;
-  surahName: string;
-  surahNameArabic: string;
-  page: number;
-  juz: number;
-  verses: Verse[];
-  revelation: 'Meccan' | 'Medinan';
-}
-
-// Mock Quran page data
-const mockPage: QuranPage = {
-  surah: 1,
-  surahName: 'Al-Fatihah',
-  surahNameArabic: 'الفاتحة',
-  page: 1,
-  juz: 1,
-  revelation: 'Meccan',
-  verses: [
-    {
-      ayah: 1,
-      text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-      translation: 'In the name of Allah, the Most Gracious, the Most Merciful',
-    },
-    {
-      ayah: 2,
-      text: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
-      translation: 'All praise is due to Allah, Lord of the worlds',
-    },
-    {
-      ayah: 3,
-      text: 'الرَّحْمَٰنِ الرَّحِيمِ',
-      translation: 'The Most Gracious, the Most Merciful',
-    },
-    {
-      ayah: 4,
-      text: 'مَالِكِ يَوْمِ الدِّينِ',
-      translation: 'Master of the Day of Judgment',
-    },
-    {
-      ayah: 5,
-      text: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ',
-      translation: 'You alone we worship, and You alone we ask for help',
-    },
-    {
-      ayah: 6,
-      text: 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ',
-      translation: 'Guide us on the Straight Path',
-    },
-    {
-      ayah: 7,
-      text: 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
-      translation:
-        'The path of those whom You have blessed; not of those who earned Your wrath, nor of those who have gone astray',
-    },
-  ],
+const toArabicDigits = (num: number) => {
+  const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return num.toString().replace(/\d/g, x => digits[parseInt(x)]);
 };
 
 const QuranPageViewerScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const [page, setPage] = useState<QuranPage>(mockPage);
-  const [showVerseDetails, setShowVerseDetails] = useState(false);
-  const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  
+  // States for Memorize / AI Mode
+  const [isListening, setIsListening] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [qiraa, setQiraa] = useState<'hafs' | 'warsh' | 'qalun'>('hafs');
+  const [showQiraaSheet, setShowQiraaSheet] = useState(false);
 
-  const handleVersePress = (verse: Verse) => {
-    setSelectedVerse(verse);
-    setShowVerseDetails(true);
-  };
+  const currentPage = quranLayoutData[currentPageIndex];
 
   const handlePreviousPage = () => {
-    // In real app, fetch previous page
-    console.log('Previous page');
+    if (currentPageIndex > 0) {
+      setCurrentPageIndex(currentPageIndex - 1);
+    }
   };
 
   const handleNextPage = () => {
-    // In real app, fetch next page
-    console.log('Next page');
+    if (currentPageIndex < quranLayoutData.length - 1) {
+      setCurrentPageIndex(currentPageIndex + 1);
+    }
   };
 
-  const screenWidth = Dimensions.get('window').width;
+  const renderLine = (line: any, index: number) => {
+    if (line.type === 'surah_name') {
+      return (
+        <View key={index} style={styles.surahHeaderFrameContainer}>
+          <View style={styles.surahHeaderFrame}>
+            <Text style={styles.surahNameDecorated}>سُورَةُ الإِسْرَاءِ</Text>
+          </View>
+        </View>
+      );
+    }
+    
+    if (line.type === 'basmallah') {
+      return (
+        <View key={index} style={styles.basmallahContainer}>
+          <Text style={styles.basmallahText}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View key={index} style={[styles.ayahLine, line.centered && styles.centeredLine]}>
+        <Text 
+          style={[styles.mushafVerseText, isHidden && styles.hiddenText]}
+          numberOfLines={1}
+          adjustsFontSizeToFit={true}
+        >
+          {line.text}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -121,81 +96,33 @@ const QuranPageViewerScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.topBarCenter}>
-          <Text style={styles.topBarSurah}>{page.surahName}</Text>
-          <Text style={styles.topBarPage}>Page {page.page} • Juz {page.juz}</Text>
+          <Text style={styles.topBarSurah}>Al-Isra</Text>
+          <Text style={styles.topBarPage}>Page {currentPage.page_number} • Juz 15</Text>
         </View>
 
         <View style={styles.topBarIcons}>
           <TouchableOpacity
-            onPress={() => setIsBookmarked(!isBookmarked)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={[styles.qiraaBadge, { marginRight: Spacing.md }]}
+            onPress={() => setShowQiraaSheet(true)}
           >
-            <Bookmark
-              size={20}
-              color={isBookmarked ? Colors.accent : Colors.textSecondary}
-              fill={isBookmarked ? Colors.accent : 'none'}
-            />
+            <Text style={styles.qiraaBadgeText}>
+              {qiraa === 'hafs' ? 'Hafs' : qiraa === 'warsh' ? 'Warsh' : 'Qalun'}
+            </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={{ marginLeft: Spacing.md }}
-            onPress={() => navigation.navigate('TajweedReference')}
-          >
-            <Info size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={{ marginLeft: Spacing.md }}
-          >
-            <Settings size={20} color={Colors.textSecondary} />
+          <TouchableOpacity onPress={() => {}}>
+            <Bookmark size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Surah Header */}
-      <View style={styles.surahHeader}>
-        <Text style={styles.surahNameArabic}>{page.surahNameArabic}</Text>
-        <Text style={styles.surahInfo}>
-          {page.revelation === 'Meccan' ? '☪️ Meccan' : '☪️ Medinan'} • {page.surahName}
-        </Text>
-      </View>
-
-      {/* Page Content - Scrollable Verses */}
+      {/* Page Content - Mushaf Layout */}
       <ScrollView
         style={styles.verseContainer}
         contentContainerStyle={styles.verseContent}
         showsVerticalScrollIndicator={false}
       >
-        {page.verses.map((verse, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.verseBlock,
-              highlightedVerse === verse.ayah && styles.verseHighlighted,
-            ]}
-            onPress={() => handleVersePress(verse)}
-            activeOpacity={0.7}
-          >
-            {/* Verse Number */}
-            <View style={styles.verseNumberContainer}>
-              <View style={styles.verseNumberBadge}>
-                <Text style={styles.verseNumber}>{verse.ayah}</Text>
-              </View>
-            </View>
-
-            {/* Verse Text (Arabic) */}
-            <Text style={styles.verseTextArabic}>{verse.text}</Text>
-
-            {/* Verse Translation (English) */}
-            <Text style={styles.verseTranslation}>{verse.translation}</Text>
-          </TouchableOpacity>
-        ))}
-
-        {/* Page End Ornament */}
-        <View style={styles.pageEnd}>
-          <Text style={styles.ornament}>۞</Text>
+        <View style={styles.mushafPageContainer}>
+          {currentPage.lines.map((line: any, index: number) => renderLine(line, index))}
         </View>
       </ScrollView>
 
@@ -203,83 +130,61 @@ const QuranPageViewerScreen: React.FC = () => {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           onPress={handlePreviousPage}
-          style={styles.navButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <ChevronLeft size={24} color={Colors.primaryLight} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.playButton}>
-          <Play size={24} color={Colors.backgroundDark} fill={Colors.backgroundDark} />
-          <Text style={styles.playText}>Play Audio</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleNextPage}
-          style={styles.navButton}
+          style={[styles.navButton, currentPageIndex === 0 && { opacity: 0.5 }]}
+          disabled={currentPageIndex === 0}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <ChevronRight size={24} color={Colors.primaryLight} />
         </TouchableOpacity>
+
+        <View style={styles.centerControls}>
+          {/* Microphone Toggle (Corrective Mode / Recitation) */}
+          <TouchableOpacity 
+            style={[styles.micButton, isListening && styles.micButtonActive]}
+            onPress={() => setIsListening(!isListening)}
+          >
+            <Mic size={28} color={isListening ? Colors.backgroundDark : Colors.accent} />
+          </TouchableOpacity>
+
+          {/* Eye Toggle (Free Recitation - hides verses) */}
+          <TouchableOpacity 
+            style={styles.eyeButton}
+            onPress={() => setIsHidden(!isHidden)}
+          >
+            {isHidden ? (
+               <EyeOff size={24} color={Colors.accent} />
+            ) : (
+               <Eye size={24} color={Colors.textSecondary} />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleNextPage}
+          style={[styles.navButton, currentPageIndex === quranLayoutData.length - 1 && { opacity: 0.5 }]}
+          disabled={currentPageIndex === quranLayoutData.length - 1}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <ChevronLeft size={24} color={Colors.primaryLight} />
+        </TouchableOpacity>
       </View>
 
-      {/* Verse Details Bottom Sheet */}
+      {/* Qira'a Selector Bottom Sheet */}
       <BottomSheet
-        visible={showVerseDetails}
-        onClose={() => setShowVerseDetails(false)}
-        title={`Ayah ${selectedVerse?.ayah}`}
-        height="70%"
+        visible={showQiraaSheet}
+        onClose={() => setShowQiraaSheet(false)}
+        title="Select Qira'a"
+        height={450}
       >
-        {selectedVerse && (
-          <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
-            {/* Arabic Text */}
-            <View style={styles.sheetSection}>
-              <Text style={styles.sheetLabel}>Arabic Text</Text>
-              <Text style={styles.sheetArabic}>{selectedVerse.text}</Text>
-            </View>
-
-            {/* Translation */}
-            <View style={styles.sheetSection}>
-              <Text style={styles.sheetLabel}>English Translation</Text>
-              <Text style={styles.sheetTranslation}>{selectedVerse.translation}</Text>
-            </View>
-
-            {/* Audio Play */}
-            <View style={styles.sheetSection}>
-              <TouchableOpacity style={styles.audioPlayButton}>
-                <Play size={20} color={Colors.textPrimary} />
-                <Text style={styles.audioPlayText}>Listen to This Verse</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Tafsir (placeholder) */}
-            <View style={styles.sheetSection}>
-              <Text style={styles.sheetLabel}>Tafsir</Text>
-              <Text style={styles.tafsirText}>
-                Tafsir content will appear here explaining the context and meaning of this verse.
-                This is a placeholder for the full Tafsir content.
-              </Text>
-            </View>
-
-            {/* Actions */}
-            <View style={styles.sheetActions}>
-              <Button
-                title="Add Bookmark"
-                onPress={() => {
-                  setShowVerseDetails(false);
-                  setIsBookmarked(true);
-                }}
-                variant="primary"
-                fullWidth
-              />
-
-              <TouchableOpacity style={styles.shareButton}>
-                <Share2 size={20} color={Colors.accent} />
-                <Text style={styles.shareText}>Share This Verse</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        )}
+        <ScrollView style={{ paddingVertical: Spacing.md }} showsVerticalScrollIndicator={false}>
+          <QiraaSelector
+            selected={qiraa}
+            onSelect={(selected) => {
+              setQiraa(selected);
+              setShowQiraaSheet(false);
+            }}
+          />
+        </ScrollView>
       </BottomSheet>
     </View>
   );
@@ -319,17 +224,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  qiraaBadge: {
+    backgroundColor: Colors.backgroundSurface,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.medium,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  qiraaBadgeText: {
+    fontFamily: Typography.bodyFont,
+    fontSize: Typography.size.xs,
+    color: Colors.textGold,
+    fontWeight: '600',
+  },
   surahHeader: {
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
   surahNameArabic: {
-    fontFamily: Typography.arabicFont,
+    fontFamily: 'DigitalKhattV1', // User custom font
     fontSize: Typography.size['2xl'],
     color: Colors.textGold,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   surahInfo: {
     fontFamily: Typography.bodyFont,
@@ -340,61 +259,69 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verseContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.lg,
   },
-  verseBlock: {
+  mushafPageContainer: {
     backgroundColor: Colors.backgroundCard,
     borderRadius: BorderRadius.large,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.md,
+    minHeight: Dimensions.get('window').height * 0.7,
     borderWidth: 1,
     borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    marginBottom: Spacing.lg,
   },
-  verseHighlighted: {
-    borderColor: Colors.accent,
-    borderWidth: 2,
-    backgroundColor: Colors.accent + '10',
-  },
-  verseNumberContainer: {
-    alignItems: 'flex-end',
-    marginBottom: Spacing.md,
-  },
-  verseNumberBadge: {
-    backgroundColor: Colors.accent,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  verseNumber: {
-    fontFamily: Typography.headingFont,
-    fontSize: Typography.size.sm,
-    fontWeight: '700',
-    color: Colors.backgroundDark,
-  },
-  verseTextArabic: {
-    fontFamily: Typography.arabicFont,
-    fontSize: Typography.size['2xl'],
-    lineHeight: Typography.size['2xl'] * 2.2,
-    color: Colors.textPrimary,
-    textAlign: 'right',
-    marginBottom: Spacing.md,
-  },
-  verseTranslation: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    lineHeight: Typography.size.sm * 1.8,
-  },
-  pageEnd: {
+  ayahLine: {
+    flexDirection: 'row',
+    width: '100%',
+    height: 38, // Fixed height per line for perfect layout
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Spacing.xl,
   },
-  ornament: {
-    fontFamily: Typography.arabicFont,
-    fontSize: 32,
-    color: Colors.accent,
+  centeredLine: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  surahHeaderFrameContainer: {
+    paddingHorizontal: Spacing.md,
+    marginBottom: 10,
+  },
+  surahHeaderFrame: {
+    borderWidth: 2,
+    borderColor: Colors.textGold,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  surahNameDecorated: {
+    fontFamily: 'QPCHafs',
+    fontSize: 28,
+    color: Colors.textGold,
+    textAlign: 'center',
+  },
+  basmallahContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  basmallahText: {
+    fontFamily: 'QPCHafs', 
+    fontSize: 24,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  mushafVerseText: {
+    flex: 1,
+    fontFamily: 'QPCHafs', 
+    fontSize: 26, // Starts at 26, scales down to fit
+    color: Colors.textPrimary,
+    textAlign: 'justify',
+    writingDirection: 'rtl',
+    includeFontPadding: false,
+  },
+  hiddenText: {
+    color: 'transparent',
   },
   bottomBar: {
     flexDirection: 'row',
@@ -404,7 +331,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
-    gap: Spacing.md,
   },
   navButton: {
     width: 48,
@@ -414,82 +340,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  playButton: {
-    flex: 1,
-    backgroundColor: Colors.accent,
-    borderRadius: BorderRadius.medium,
-    paddingVertical: Spacing.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  playText: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.base,
-    fontWeight: '600',
-    color: Colors.backgroundDark,
-  },
-  sheetContent: {
-    paddingVertical: Spacing.lg,
-  },
-  sheetSection: {
-    marginBottom: Spacing.lg,
-  },
-  sheetLabel: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-  },
-  sheetArabic: {
-    fontFamily: Typography.arabicFont,
-    fontSize: Typography.size.xl,
-    lineHeight: Typography.size.xl * 2.2,
-    color: Colors.textPrimary,
-    textAlign: 'right',
-  },
-  sheetTranslation: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.base,
-    color: Colors.textSecondary,
-    lineHeight: Typography.size.base * 1.8,
-  },
-  audioPlayButton: {
+  centerControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  micButton: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.backgroundSurface,
-    borderRadius: BorderRadius.medium,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-  audioPlayText: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.base,
-    color: Colors.textPrimary,
-  },
-  tafsirText: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    lineHeight: Typography.size.sm * 1.8,
-  },
-  sheetActions: {
-    marginTop: Spacing.lg,
-    gap: Spacing.md,
-  },
-  shareButton: {
-    flexDirection: 'row',
+    borderWidth: 2,
+    borderColor: Colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
   },
-  shareText: {
-    fontFamily: Typography.bodyFont,
-    fontSize: Typography.size.base,
-    color: Colors.accent,
+  micButtonActive: {
+    backgroundColor: Colors.accent,
+  },
+  eyeButton: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.backgroundSurface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

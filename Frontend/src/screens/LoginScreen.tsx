@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography, GlobalStyles, BorderRadius } from '../config/theme';
@@ -61,7 +62,10 @@ const LoginScreen: React.FC = () => {
       >
         {/* Logo Section */}
         <View style={styles.logoSection}>
-          <Text style={styles.logo}>☪️</Text>
+          <Image 
+            source={require('../../assets/theLogo.png')} 
+            style={styles.logoImage} 
+          />
           <Text style={styles.appName}>Qurany</Text>
         </View>
 
@@ -161,8 +165,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xl,
   },
-  logo: {
-    fontSize: 48,
+  logoImage: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
     marginBottom: Spacing.md,
   },
   appName: {

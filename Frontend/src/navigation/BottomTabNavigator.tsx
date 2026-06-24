@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import {
   BottomTabNavigationProp,
   createBottomTabNavigator,
@@ -10,14 +10,14 @@ import { Colors, Spacing, Typography } from '../config/theme';
 // Screen components (to be created)
 import HomeScreen from '../screens/HomeScreen';
 import QuranBrowserScreen from '../screens/QuranBrowserScreen';
-import AIModeSelectionScreen from '../screens/AIModeSelectionScreen';
+import MemorizeScreen from '../screens/MemorizeScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 export type BottomTabParamList = {
-  Home: undefined;
   Quran: undefined;
-  AIModes: undefined;
+  Memorize: undefined;
+  Home: undefined;
   Progress: undefined;
   Profile: undefined;
 };
@@ -29,6 +29,7 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 const BottomTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
@@ -47,17 +48,25 @@ const BottomTabNavigator: React.FC = () => {
           fontWeight: '500',
           marginTop: 4,
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color, size, focused }) => {
           let icon;
 
           switch (route.name) {
             case 'Home':
-              icon = <Home size={size} color={color} strokeWidth={2} />;
+              // Render the logo
+              icon = (
+                <View style={[styles.centerLogoContainer, focused && styles.centerLogoFocused]}>
+                  <Image 
+                    source={require('../../assets/theLogo.png')} 
+                    style={styles.tabLogo} 
+                  />
+                </View>
+              );
               break;
             case 'Quran':
               icon = <BookOpen size={size} color={color} strokeWidth={2} />;
               break;
-            case 'AIModes':
+            case 'Memorize':
               icon = <Mic2 size={size} color={color} strokeWidth={2} />;
               break;
             case 'Progress':
@@ -79,23 +88,26 @@ const BottomTabNavigator: React.FC = () => {
       })}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: 'Home' }}
-      />
-      <Tab.Screen
         name="Quran"
         component={QuranBrowserScreen}
         options={{ title: 'Quran' }}
       />
       <Tab.Screen
-        name="AIModes"
-        component={AIModeSelectionScreen}
+        name="Memorize"
+        component={MemorizeScreen}
         options={{
-          title: 'AI Modes',
+          title: 'Memorize',
           tabBarIconStyle: {
             marginBottom: 4,
           },
+        }}
+      />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ 
+          title: 'Home',
+          tabBarLabelStyle: { display: 'none' }, // Hide label for the center logo
         }}
       />
       <Tab.Screen
@@ -116,6 +128,25 @@ const styles = StyleSheet.create({
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  centerLogoContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.backgroundDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 16, // Lift it slightly more
+  },
+  centerLogoFocused: {
+    borderColor: Colors.accent,
+  },
+  tabLogo: {
+    width: 44,
+    height: 44,
+    resizeMode: 'contain',
   },
 });
 

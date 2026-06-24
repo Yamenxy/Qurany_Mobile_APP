@@ -158,11 +158,7 @@ const RegisterScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Default Qiraa */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionLabel}>Default Qira'a</Text>
-            <QiraaSelector selected={selectedQiraa} onSelect={setSelectedQiraa} />
-          </View>
+
 
           {/* Sign Up Button */}
           <Button

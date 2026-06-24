@@ -75,9 +75,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   arabicName: {
-    fontFamily: Typography.headingFont,
-    fontSize: Typography.size.base,
-    fontWeight: '600',
+    fontFamily: 'QPCHafs', 
+    fontSize: Typography.size['2xl'],
     color: Colors.textGold,
     marginBottom: Spacing.xs,
   },

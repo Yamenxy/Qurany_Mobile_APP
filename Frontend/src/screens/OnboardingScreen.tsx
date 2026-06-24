@@ -7,6 +7,7 @@ import {
   Dimensions,
   ScrollView,
   FlatList,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography, GlobalStyles, BorderRadius } from '../config/theme';
@@ -160,6 +161,15 @@ const styles = StyleSheet.create({
   container: {
     ...GlobalStyles.screenContainer,
     paddingVertical: Spacing.lg,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
   },
   header: {
     flexDirection: 'row',

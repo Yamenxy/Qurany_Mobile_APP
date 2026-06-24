@@ -86,12 +86,7 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Learning Preferences</Text>
 
-        <MenuItem
-          icon="🎙️"
-          label="Default Qira'a"
-          value={user?.defaultQiraa === 'hafs' ? 'Hafs' : user?.defaultQiraa}
-          onPress={() => navigation.navigate('Settings' as never)}
-        />
+
 
         <MenuItem
           icon="🎂"

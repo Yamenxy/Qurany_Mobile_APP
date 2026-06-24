@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography, GlobalStyles } from '../config/theme';
-import { StreakWidget, Button, ModeCard } from '../components';
+import { StreakWidget, Button } from '../components';
 import { useAppStore } from '../store/appStore';
 
 const HomeScreen: React.FC = () => {
@@ -66,28 +66,7 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* AI Modes Quick Access */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>AI Practice Modes</Text>
-        
-        <ModeCard
-          mode="correcting"
-          title="Correcting Mode"
-          arabicTitle="وضع التصحيح"
-          description="See the page, recite aloud"
-          tag="For all levels"
-          onPress={() => navigation.navigate('PreSessionSetup', { mode: 'correcting' })}
-        />
-        
-        <ModeCard
-          mode="ai_recitation"
-          title="AI Recitation"
-          arabicTitle="وضع الاستظهار"
-          description="Recite from memory"
-          tag="For memorizers"
-          onPress={() => navigation.navigate('PreSessionSetup', { mode: 'ai_recitation' })}
-        />
-      </View>
+
     </ScrollView>
   );
 };

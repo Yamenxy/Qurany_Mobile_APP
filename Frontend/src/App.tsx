@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Font from 'expo-font';
 import i18n from './config/i18n';
 import { useAppStore } from './store/appStore';
 import BottomTabNavigator from './navigation/BottomTabNavigator';
@@ -50,6 +51,18 @@ export default function App() {
       try {
         // Initialize i18n
         await i18n.init;
+        
+        // Load custom fonts
+        await Font.loadAsync({
+          'DigitalKhattV1': require('../assets/fonts/Digital Khatt V1 Font.otf'),
+          'DigitalKhattV2': require('../assets/fonts/Digital Khatt V2 Font.otf'),
+          'DigitalKhattIndoPak': require('../assets/fonts/DigitalKhattIndoPak.otf'),
+          'IndopakNastaleeq': require('../assets/fonts/Indopak Nastaleeq font.ttf'),
+          'KFGQPCNastaleeq': require('../assets/fonts/KFGQPCNastaleeq-Regular.ttf'),
+          'QPCHafs': require('../assets/fonts/QPC Hafs font.ttf'),
+          'MeQuran': require('../assets/fonts/me_quran_volt_newmet.ttf'),
+        });
+
         setAppReady(true);
       } catch (error) {
         console.error('Error initializing app:', error);
@@ -68,44 +81,46 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <NavigationContainer
-          theme={{
-            dark: true,
-            colors: {
-              primary: Colors.primaryLight,
-              background: Colors.backgroundDark,
-              card: Colors.backgroundCard,
-              text: Colors.textPrimary,
-              border: Colors.divider,
-              notification: Colors.error,
-            },
-          }}
-        >
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.backgroundDark }}>
+          <NavigationContainer
+            theme={{
+              dark: true,
+              colors: {
+                primary: Colors.primaryLight,
+                background: Colors.backgroundDark,
+                card: Colors.backgroundCard,
+                text: Colors.textPrimary,
+                border: Colors.divider,
+                notification: Colors.error,
+              },
             }}
           >
-            {isAuthenticated ? (
-              <>
-                <Stack.Screen name="Main" component={BottomTabNavigator} />
-                <Stack.Screen name="Notifications" component={NotificationsScreen} />
-                <Stack.Screen name="Achievements" component={AchievementsScreen} />
-                <Stack.Screen name="PreSessionSetup" component={PreSessionSetupScreen} />
-                <Stack.Screen name="AIRecitation" component={AIRecitationScreen} />
-                <Stack.Screen name="CorrectingMode" component={CorrectingModeScreen} />
-                <Stack.Screen name="TeachingMode" component={TeachingModeScreen} />
-                <Stack.Screen name="SessionSummary" component={SessionSummaryScreen} />
-                <Stack.Screen name="QuranPageViewer" component={QuranPageViewerScreen} />
-                <Stack.Screen name="TajweedReference" component={TajweedReferenceScreen} />
-                <Stack.Screen name="DailyChallenges" component={DailyChallengesScreen} />
-                <Stack.Screen name="SheikhAudioLibrary" component={SheikhAudioLibraryScreen} />
-              </>
-            ) : (
-              <Stack.Screen name="Auth" component={AuthNavigator} />
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              {isAuthenticated ? (
+                <>
+                  <Stack.Screen name="Main" component={BottomTabNavigator} />
+                  <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                  <Stack.Screen name="Achievements" component={AchievementsScreen} />
+                  <Stack.Screen name="PreSessionSetup" component={PreSessionSetupScreen} />
+                  <Stack.Screen name="AIRecitation" component={AIRecitationScreen} />
+                  <Stack.Screen name="CorrectingMode" component={CorrectingModeScreen} />
+                  <Stack.Screen name="TeachingMode" component={TeachingModeScreen} />
+                  <Stack.Screen name="SessionSummary" component={SessionSummaryScreen} />
+                  <Stack.Screen name="QuranPageViewer" component={QuranPageViewerScreen} />
+                  <Stack.Screen name="TajweedReference" component={TajweedReferenceScreen} />
+                  <Stack.Screen name="DailyChallenges" component={DailyChallengesScreen} />
+                  <Stack.Screen name="SheikhAudioLibrary" component={SheikhAudioLibraryScreen} />
+                </>
+              ) : (
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaView>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
