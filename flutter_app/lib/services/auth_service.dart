@@ -24,9 +24,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    // For now, use local authentication
-    // In production, this would call the backend API
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
 
     if (email.isNotEmpty && password.length >= 6) {
       _isLoggedIn = true;

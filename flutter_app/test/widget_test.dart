@@ -7,6 +7,6 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(QuranyApp(prefs: prefs));
-    await tester.pump();
+    await tester.pumpAndSettle();
   });
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../models/recitation_session.dart';
+import '../../widgets/app_icons.dart';
 
 class RecitationResultScreen extends StatefulWidget {
   final Map<String, dynamic> resultData;
@@ -111,10 +112,7 @@ class _RecitationResultScreenState extends State<RecitationResultScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('نتيجة التلاوة'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
       ),
       body: Column(
         children: [

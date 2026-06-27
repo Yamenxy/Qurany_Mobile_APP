@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
 import '../../services/bookmark_service.dart';
+import '../../widgets/app_icons.dart';
 
 class BookmarksScreen extends StatelessWidget {
   const BookmarksScreen({super.key});
@@ -14,10 +15,7 @@ class BookmarksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('العلامات المرجعية'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
         actions: [
           if (bookmarks.bookmarks.isNotEmpty)
             IconButton(
@@ -119,8 +117,7 @@ class BookmarksScreen extends StatelessWidget {
                       subtitle: Text(
                         'الآية ${bookmark.verseNumber} • ${_formatDate(bookmark.dateTime)}',
                       ),
-                      trailing: const Icon(
-                        Icons.arrow_back_ios,
+                      trailing: AppIcons.forwardChevron(
                         size: 16,
                         color: QuranyTheme.primaryGreen,
                       ),
