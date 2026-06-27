@@ -1,0 +1,63 @@
+<%
+  actions = []
+  if @chapter.id > 1
+    actions << link_to('Previous Surah', ayah_audio_file_path(@recitation.id, chapter_id: @chapter.id - 1), class: 'btn btn-dark')
+  end
+
+  if @chapter.id < 114
+    actions << link_to('Next Surah', ayah_audio_file_path(@recitation.id, chapter_id: @chapter.id + 1), class: 'btn btn-dark')
+  end
+
+  actions << link_to('View Segments', segment_builder_ayah_audio_file_path(@recitation.id, chapter_id: @chapter.id), class: 'btn btn-success')
+%>
+
+<%= render 'tools/header',
+           name: 'Ayah recitations',
+           title: "#{@recitation.name} - Surah #{@chapter.name_simple}",
+           key: 'ayah_recitation',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Recitations', path: ayah_audio_files_path(id: @recitation.id) }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section">
+    <h3>Segments</h3>
+    <table class="w-full hover:bg-gray-50">
+      <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+      <tr>
+        <th><%= sort_order_link 'Verse', :verse_number, id: @recitation.id %></th>
+        <th>Duration</th>
+        <th>Words</th>
+        <th>Total Segments</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <% @audio_files.each do |file| %>
+        <tr class="hover:bg-gray-200 border-b">
+          <th scope="row" class="py-2 pl-2"><%= file.verse.verse_key %></th>
+          <td class="py-2">
+            <%= file.duration %>
+          </td>
+
+          <td class="py-2">
+            <%= file.verse.words_count %>
+          </td>
+
+          <td class="py-2">
+            <%= file.segments.size %>
+          </td>
+
+          <td class="py-2">
+            <div class="flex flex-col gap-1">
+              <%= link_to 'Fix Segments', segment_builder_ayah_audio_file_path(@recitation.id, chapter_id: @chapter.id, verse: file.verse_number), class: 'btn btn-success' %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+

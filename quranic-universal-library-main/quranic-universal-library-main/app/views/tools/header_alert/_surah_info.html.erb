@@ -1,0 +1,26 @@
+<%
+  resource = local_assigns[:resource] || @resource
+%>
+
+<div class="px-4 py-3 rounded mb-4 bg-gray-100 border border-gray-400 text-gray-700 flex relative" role="alert" data-controller="alert">
+  <i class="fa fa-info-circle me-2 fa-2x"></i>
+  <div>
+    <p>
+      <strong>
+        Welcome to the Surah Info Tool!
+      </strong>
+    </p>
+
+    <p>
+      This allows users to review and suggest improvements to the surah info.
+    </p>
+
+    <p>
+      If you'd like to contribute to improving this <%= resource.name %>, simply click the Request Access button below to send a request to the admin. Once approved, you'll be able to start suggesting the improvements to this resource.
+    </p>
+
+    <p id="btn-request-permission">
+      <%= link_to 'Request Access', '_', class: 'btn btn-dark',  data: { controller: 'ajax-modal', url: new_user_project_path(resource_id: resource.id, modal: true), css_class: 'modal-lg'} %>
+    </p>
+  </div>
+</div>

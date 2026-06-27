@@ -1,0 +1,22 @@
+<div class="px-4 py-3 rounded mb-4 bg-gray-100 border border-gray-400 text-gray-700 flex relative" role="alert" data-controller="alert">
+  <i class="fa fa-info-circle me-2 fa-2x"></i>
+  <div>
+    <p>
+      <strong>
+        Welcome to the Surah recitations segment tool
+      </strong>
+    </p>
+
+    <p>
+      Segment/timestamps for each word are typically generated using machine learning. This tool allows us to preview the highlighting and refine or correct edge cases to ensure accuracy.
+    </p>
+
+    <p>
+      If you'd like to contribute to <%= @resource.name %>, simply click the link below to request access from the admin. Once approved, you'll be able to correct and improve the segments for <%= @resource.name %>.
+    </p>
+
+    <p id="btn-request-permission">
+      <%= link_to 'Request Access', '_', class: 'btn btn-dark',  data: { controller: 'ajax-modal', url: new_user_project_path(resource_id: @resource.id, modal: true), css_class: 'modal-lg'} %>
+    </p>
+  </div>
+</div>

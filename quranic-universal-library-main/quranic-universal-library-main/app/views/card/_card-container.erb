@@ -1,0 +1,15 @@
+<%
+  pattern = local_assigns[:patterns]&.sample
+  is_link = card.respond_to?(:url) && card.url.present?
+  tag_name = is_link ? :a : :div
+  href_attr = is_link ? { href: card.url } : {}
+  card_type = card.respond_to?(:type) ? card.type : ''
+  data_attrs = local_assigns[:data] || {}
+%>
+
+<%= content_tag tag_name, class: "w-full h-full block transition-transform duration-300 hover:scale-[1.02] group", **href_attr, data: data_attrs  do %>
+  <div class="relative rounded-3xl md:rounded-[45px] h-full min-h-0 flex flex-col tool-card-with-bg px-6 md:px-8 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 <%= "#{card_type} pattern#{pattern}" %>">
+    <div class="overlay opacity-90 group-hover:opacity-85 transition-opacity duration-300"></div>
+    <%= yield %>
+  </div>
+<% end %>

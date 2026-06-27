@@ -1,0 +1,27 @@
+<%
+  change_logs = @presenter.change_logs
+  pagination = @presenter.pagination
+%>
+
+<%= render 'layouts/qul_head' %>
+
+<div class="container mx-auto px-6 py-10 space-y-8">
+  <div class="space-y-3">
+    <h1 class="text-4xl font-bold text-gray-900">Change logs</h1>
+    <p class="text-lg text-gray-600">
+      This page shows updates and changes across QUL resources over time.
+    </p>
+  </div>
+
+  <% if change_logs.any? %>
+    <div class="space-y-6">
+      <%= render partial: 'change_logs/item', collection: change_logs, as: :change_log %>
+    </div>
+
+    <%= pagination_section pagination %>
+  <% else %>
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 text-gray-600">
+      No changelogs are available yet.
+    </div>
+  <% end %>
+</div>

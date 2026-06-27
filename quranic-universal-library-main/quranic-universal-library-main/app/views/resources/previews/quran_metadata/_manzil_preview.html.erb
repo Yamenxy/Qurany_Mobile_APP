@@ -1,0 +1,58 @@
+<%
+  id = (params[:manzil].presence || 1).to_i.abs
+  manzil = Manzil.find_by(manzil_number: id) || Manzil.first
+%>
+
+<div class="flex flex-wrap items-center justify-center gap-4 mb-6">
+  <div class="flex items-center">
+    <%= label_tag :manzil, 'Jump to Manzil', class: 'me-2 font-medium' %>
+    <%= select_tag :manzil,
+                   options_for_select((1..7).to_a, manzil.manzil_number),
+                   onchange: "jumpToManzil(this.value)",
+                   class: "px-3 py-2 border rounded bg-white shadow-sm",
+                   style: 'min-width: 220px',
+                   data: { controller: 'select2' } %>
+  </div>
+
+  <div class="flex gap-2">
+    <% if manzil.manzil_number > 1 %>
+      <%= link_to detail_resources_path('quran-metadata', resource.id, manzil: manzil.manzil_number - 1), class: 'btn btn-secondary' do %>
+        ← Previous
+      <% end %>
+    <% end %>
+
+    <% if manzil.manzil_number < 7 %>
+      <%= link_to detail_resources_path('quran-metadata', resource.id, manzil: manzil.manzil_number + 1), class: 'btn btn-secondary' do %>
+        Next →
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="p-6 rounded-xl bg-white shadow">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold">Manzil <%= manzil.manzil_number %></h1>
+    <p class="mt-2 text-sm text-gray-600">Total Ayahs:
+      <strong>
+        <%= manzil.verses_count %>
+      </strong></p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+    <h2 class="text-lg font-semibold mb-2">Ayah Range</h2>
+    <p><strong>From:</strong> <%= manzil.first_verse.chapter.name_simple %>, Ayah <%= manzil.first_verse.verse_number %></p>
+    <p><strong>To:</strong> <%= manzil.last_verse.chapter.name_simple %>, Ayah <%= manzil.last_verse.verse_number %></p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <h2 class="text-lg font-semibold mb-4">Surahs in this Manzil</h2>
+    <ul class="divide-y divide-gray-200">
+      <% manzil.verse_mapping.each do |chapter_id, verses_range| %>
+        <% chapter = Chapter.find(chapter_id) %>
+        <li class="py-2">
+          <span class="font-medium">Surah <%= chapter.name_simple %></span>: Ayahs <%= verses_range %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

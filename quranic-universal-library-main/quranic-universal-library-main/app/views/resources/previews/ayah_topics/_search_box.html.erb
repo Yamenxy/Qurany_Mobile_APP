@@ -1,0 +1,82 @@
+<div class="mb-6">
+  <%= form_tag detail_resources_path('ayah-topics', resource.id), method: :get, class: 'w-full' do %>
+    <%= hidden_field_tag :sort_by, defined?(@sort_by) ? @sort_by : nil %>
+    <%= hidden_field_tag :sort_direction, defined?(@sort_direction) ? @sort_direction : nil %>
+    <div class="flex gap-3 w-full">
+      <div class="flex-1 relative">
+        <%= text_field_tag :search, 
+            search_query, 
+            placeholder: 'Search topics by name, Arabic name, description, or ayah (e.g., 2:255)...', 
+            class: 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' %>
+        <% if search_query.present? %>
+          <%= link_to detail_resources_path('ayah-topics', resource.id), class: 'absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600' do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+      <%= button_tag type: 'submit', class: 'px-8 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap' do %>
+        Search
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if search_query.present? %>
+    <div class="mt-3 space-y-2">
+      <% if is_verse_search %>
+        <!-- Ayah Search Results -->
+        <% if searched_verse %>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900 mb-1">
+                  Ayah <%= searched_verse.verse_key %> - <%= searched_verse.chapter.name_simple %>
+                </p>
+                <p class="text-sm text-gray-700 qpc-hafs mb-2">
+                  <%= searched_verse.text_qpc_hafs %>
+                </p>
+                <p class="text-sm text-gray-600">
+                  <strong><%= total_topics %></strong> <%= total_topics == 1 ? 'topic is' : 'topics are' %> associated with this ayah
+                </p>
+              </div>
+            </div>
+          </div>
+        <% else %>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-red-900">Ayah not found</p>
+                <p class="text-sm text-red-700">
+                  No ayah found with verse key "<%= search_query %>". Please check the format (e.g., 2:255) and try again.
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <!-- Regular Text Search Results -->
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-gray-600">
+            Search results for: <strong>"<%= search_query %>"</strong>
+          </span>
+          <span class="text-gray-500">—</span>
+          <span class="text-gray-600">
+            <%= total_topics %> <%= total_topics == 1 ? 'result' : 'results' %> found
+          </span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+

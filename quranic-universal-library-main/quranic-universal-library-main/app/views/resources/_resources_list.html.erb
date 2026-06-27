@@ -1,0 +1,38 @@
+<%
+  view_type = params[:view] == 'grid' ? 'grid' : 'list'
+  cards = @resource_cards || downloadable_resource_cards.values
+  search_active = @resource_search&.active?
+  count = search_active ? @resource_search.result_count : cards.length
+%>
+
+<%= turbo_frame_tag 'resources' do %>
+  <%= render 'shared/page_font', verses: [Verse.find_by(verse_key: '73:4')] %>
+
+  <div class="resources-lists">
+    <%= render partial: 'resources/search_toolbar',
+               locals: {
+                 title: 'Available Resources',
+                 count: count,
+                 view_type: view_type,
+                 search_result: @resource_search
+               } %>
+
+    <% if search_active %>
+      <%= render partial: 'resources/search_summary',
+                 locals: {
+                   search_result: @resource_search,
+                   show_facets: true
+                 } %>
+
+      <%= render partial: 'resources/search_results',
+                 locals: {
+                   search_result: @resource_search,
+                   view_type: view_type
+                 } %>
+    <% else %>
+      <div class="w-full">
+        <%= render "resources/resources_view/#{view_type}", resources: cards %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,83 @@
+<%= turbo_frame_tag :ayah_recitation do %>
+   <div class="flex items-start justify-between gap-4 flex-wrap" data-controller="ayah-recitation-selector">
+     <div class="flex flex-wrap gap-2">
+       <% rc = @presenter.recitation_resource %>
+       <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">
+         <%= rc&.name.presence || "Recitation ##{@presenter.recitation_resource_id}" %>
+       </span>
+     </div>
+
+    <button type="button"
+            class="px-3 py-1.5 bg-white text-gray-900 rounded text-sm border border-gray-200 hover:bg-gray-50"
+            data-action="click->ayah-recitation-selector#open">
+      Change reciter
+    </button>
+
+    <div class="hidden fixed inset-0 bg-black/40 z-[10000]" data-ayah-recitation-selector-target="backdrop" data-action="click->ayah-recitation-selector#close"></div>
+    <div class="hidden fixed top-0 right-0 h-full w-[420px] max-w-[90vw] bg-white border-l border-gray-200 z-[10001] flex-col" data-ayah-recitation-selector-target="panel">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div class="font-semibold text-gray-900">Select reciter</div>
+        <button type="button" class="text-gray-500 hover:text-gray-900" data-action="click->ayah-recitation-selector#close">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="p-4 overflow-y-auto flex-1">
+        <%= form_with url: ayah_recitation_path(@ayah.verse_key), method: :get, local: true, data: { turbo_frame: :ayah_recitation }, html: { data: { ayah_recitation_selector_target: "form" } } do %>
+          <div class="space-y-2">
+            <% @presenter.recitation_resources.each do |r| %>
+              <label class="flex items-start gap-2 text-sm text-gray-800">
+                <%= radio_button_tag "recitation_resource_id", r.id, @presenter.recitation_resource_id == r.id, data: { action: "change->ayah-recitation-selector#change" } %>
+                <span><%= r.name %></span>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% recitation = @presenter.recitation %>
+  <% if recitation.present? && @presenter.recitation_controller.present? %>
+    <div
+      class="mt-4 bg-white border border-gray-200 rounded p-4 relative"
+      data-controller="<%= @presenter.recitation_controller %>"
+      id="audio-player"
+      data-recitation="<%= recitation.id %>"
+      data-verse-key="<%= @ayah.verse_key %>"
+    >
+      <div class="mb-4">
+        <div id="current-ayah">
+          <div id="words" class="flex flex-wrap qpc-hafs mb-4 gap-1"></div>
+          <span class="highlight-span" id="word-highlight"></span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-14">
+        <div class="max-w-3xl mx-auto px-4 py-2 h-full relative">
+          <div class="flex items-center h-full gap-4">
+            <span id="current-time" class="text-sm text-gray-600 whitespace-nowrap font-medium md:min-w-[75px] text-right">0:00</span>
+            <button id="play-button" disabled class="p-2 bg-primary-100 rounded-full shadow-sm hover:shadow-md hover:bg-primary-200 transition-all flex-shrink-0">
+              <i class="fas fa-play text-gray-600 w-6 h-6"></i>
+            </button>
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+              <div class="flex-1">
+                <div id="progress-bar" class="h-2 bg-gray-200 rounded-full relative cursor-pointer">
+                  <div id="progress" class="h-full bg-blue-300 rounded-full transition-all duration-50 w-0"></div>
+                </div>
+              </div>
+              <span id="total-duration" class="text-sm text-gray-600 whitespace-nowrap font-medium md:min-w-[75px] text-right">0:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a id="previous-ayah" href="?ayah=<%= @ayah.previous_ayah&.verse_key %>" class="hidden"></a>
+      <a id="next-ayah" href="?ayah=<%= @ayah.next_ayah&.verse_key %>" class="hidden"></a>
+      <select id="ayah-select" class="hidden"></select>
+    </div>
+  <% else %>
+    <div class="mt-4 text-sm text-gray-600">No recitation available.</div>
+  <% end %>
+<% end %>
+
+

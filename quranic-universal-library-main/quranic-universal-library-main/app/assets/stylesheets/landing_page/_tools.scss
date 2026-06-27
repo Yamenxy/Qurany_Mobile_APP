@@ -1,0 +1,24 @@
+.sidescroll-container {
+  padding: 0 #{"max(1rem, calc((100vw - 1680px) / 2 + 1rem))"};
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  scroll-snap-type: x mandatory;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.dropdown-toggle,
+.dropdown-item {
+  color: black;
+}

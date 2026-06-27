@@ -1,0 +1,20 @@
+As-Salaam-Alaikum <%= @user.name %>,
+
+We hope you are doing well. An updated version of <%= @resource.name %> is now available on QUL (Quranic Universal Library).
+
+Resource type: <%= @resource_type %>
+
+<% if @change_log.present? %>
+What's new
+
+<%= @change_log.title %>
+<%= @change_log.excerpt %>
+
+View full change log <%= change_log_url(@change_log) %>
+
+<% end %>
+Please use the link below to download the latest version:
+
+Download the Updated Resource <%= detail_resources_url(@resource.resource_type, @resource.id) %>
+
+We appreciate your involvement in our community, and we are committed to continuously improving the resources we provide. If you have any questions or need further assistance, feel free to reach out.

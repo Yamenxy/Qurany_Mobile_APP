@@ -1,0 +1,38 @@
+<table class="w-full hover:bg-gray-50 mt-4">
+  <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+  <tr>
+    <th>Word id</th>
+    <th>IndoPak text</th>
+    <th>En translation</th>
+    <th><%= current_language.name %> Translation</th>
+    <th>Proofreading</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <% @verse.words.order('position asc').each do |word| %>
+    <% translation = word.translation_for_language(current_language) %>
+    <tr class="hover:bg-gray-200 border-b <%= 'bg-danger text-white' if translation.blank? %>">
+      <th scope="row" class="py-2 pl-2"><%= word.position %></th>
+
+      <td class="py-2">
+        <span class="indopak">
+        <%= word.text_indopak %>
+        </span>
+      </td>
+
+      <td class="py-2">
+        <%= word.en_translation&.text %>
+      </td>
+
+      <td class="py-2">
+        <span class="<%= current_language.iso_code %> current_language.name.downcase">
+          <%= translation&.text %>
+        </span>
+      </td>
+      <td class="py-2">
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

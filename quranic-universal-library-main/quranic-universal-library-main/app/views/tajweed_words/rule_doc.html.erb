@@ -1,0 +1,66 @@
+<%
+  sample_words = []
+  tajweed = TajweedRules.new('new')
+  rule = tajweed.documentation[(params[:rule].to_sym)]
+%>
+
+<%= render 'tools/header',
+           name: "Tajweed rule",
+           title: "Tajweed rule: <strong>#{rule[:name]}</strong>",
+           help: false
+%>
+
+<%#= render 'shared/page_font', verses: [@word.verse] %>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section page-section-card">
+    <%= safe_html rule[:description] %>
+
+    <h3 class="tajweed-new mt-2 mb-0">
+      Rule Color:
+      <span class="tajweed-rule-icon <%= params[:rule] %>"></span>
+      <span class="qpc-hafs <%= params[:rule] %>">بِسۡمِ ٱللَّهِ</span>
+    </h3>
+    <h3 class="tajweed-new mt-2 mb-0">
+      Rule Letters:
+      <div class="qpc-hafs">
+        <%= safe_html rule[:rule_letters] %>
+      </div>
+    </h3>
+  </div>
+
+  <% if rule[:rule_tip] %>
+    <div class='p-4 mb-4 bg-gray-800 border border-gray-700 text-gray-100 rounded'>
+      <%= safe_html rule[:rule_tip] %>
+    </div>
+  <% end %>
+
+  <div class="page-section page-section-card mt-4">
+    <h2>Sample words</h2>
+
+    <table class="w-full hover:bg-gray-50">
+      <thead class="sticky top-0 z-10 bg-white border-b border-gray-300">
+      <tr>
+        <th>Location</th>
+        <th>Text</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      </tbody>
+    </table>
+
+    <% if rule[:links].present? %>
+      <p>
+        For more detail about <%= rule[:name] %> please visit:
+        <u>
+          <% rule[:links].each do |link| %>
+            <li>
+              <%= link_to link, link, target: '_blank' %>
+            </li>
+          <% end %>
+        </u>
+      </p>
+    <% end %>
+  </div>
+</div>

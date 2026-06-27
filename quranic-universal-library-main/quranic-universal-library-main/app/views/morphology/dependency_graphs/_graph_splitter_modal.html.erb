@@ -1,0 +1,121 @@
+<div class="fixed inset-0 z-[9999] overflow-y-auto opacity-0 transition-opacity duration-300 hidden" 
+     id="graphSplitterModal" 
+     tabindex="-1" 
+     aria-labelledby="graphSplitterModalLabel" 
+     aria-hidden="true"
+     data-controller="graph-splitter"
+     data-graph-splitter-chapter-value="<%= @chapter_number %>"
+     data-graph-splitter-verse-value="<%= @verse_number %>">
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div class="relative w-full max-w-6xl transform transition-all duration-300">
+      <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h5 class="text-lg font-semibold text-gray-900 m-0" id="graphSplitterModalLabel">Split Graph - Verse <%= @chapter_number %>:<%= @verse_number %></h5>
+          <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors p-1" data-action="click->graph-splitter#closeModal" aria-label="Close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="px-6 py-4 max-h-[70vh] overflow-y-auto">
+        <div data-graph-splitter-target="loadingState" class="text-center py-12">
+          <div class="mx-auto h-7 w-7 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" role="status" aria-label="Loading"></div>
+          <p class="mt-3 text-gray-600">Loading graph data...</p>
+        </div>
+
+        <div data-graph-splitter-target="contentState" class="hidden">
+          <div class="accordion mb-4" id="graphSplitterAccordion">
+            <div class="accordion-item border border-gray-300 rounded">
+              <h2 class="accordion-header" id="headingInstructions">
+                <button class="accordion-button collapsed text-sm py-2 px-3" type="button" data-controller="collapse" data-action="click->collapse#toggle" data-collapse-target-value="#collapseInstructions" aria-expanded="false" aria-controls="collapseInstructions">
+                  <i class="fa fa-info-circle mr-2 text-blue-600"></i> Instructions & Warnings
+                </button>
+              </h2>
+              <div id="collapseInstructions" class="accordion-collapse collapse hidden" aria-labelledby="headingInstructions" data-bs-parent="#graphSplitterAccordion" data-controller="collapse">
+                <div class="accordion-body p-3">
+                  <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
+                    <p class="text-sm text-blue-800 mb-0">
+                      <strong>Instructions:</strong> Drag and drop word nodes between graphs to reorganize them. You can create a new empty graph and move nodes into it.
+                    </p>
+                  </div>
+
+                  <div class="bg-yellow-50 border border-yellow-300 rounded p-3">
+                    <div class="text-sm text-yellow-800">
+                      <p class="mb-2"><strong><i class="fa fa-exclamation-triangle"></i> Warning:</strong></p>
+                      <ul class="list-disc pl-5 mb-0 space-y-1">
+                        <li>When splitting graphs, edges connecting nodes across different graphs will be automatically deleted to maintain graph integrity.</li>
+                        <li>Maintain the verse word sequence when splitting. For example, if a verse has 20 words and you want to divide it into multiple graphs, move words 1-5 to the first graph, words 6-10 to the second graph, words 11-15 to the third graph, and so on.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div data-graph-splitter-target="errorContainer" class="bg-red-50 border border-red-200 rounded p-3 mb-4 hidden">
+            <p class="text-sm text-red-800 mb-0"></p>
+          </div>
+
+          <div class="mb-4 flex justify-end">
+            <button type="button" class="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition" data-action="click->graph-splitter#createNewGraph">
+              <i class="fa fa-plus-circle"></i> Add Graph
+            </button>
+          </div>
+
+          <div data-graph-splitter-target="graphsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+        </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+          <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition" data-action="click->graph-splitter#closeModal">Close</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition" data-action="click->graph-splitter#saveChanges" data-graph-splitter-target="saveButton">
+            <span data-graph-splitter-target="saveButtonText">Save Changes</span>
+            <span data-graph-splitter-target="saveButtonSpinner" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin hidden ml-2" role="status">
+              <span class="sr-only">Saving...</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <template data-graph-splitter-target="graphTemplate">
+    <div class="graph-card" data-graph-id="">
+      <div class="bg-white border border-gray-300 rounded-lg shadow-sm">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+          <h6 class="text-base font-semibold text-gray-800 mb-0">Graph <span class="graph-number"></span></h6>
+          <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded node-count">0 nodes</span>
+        </div>
+        <div class="p-4 graph-dropzone min-h-[400px] max-h-[400px] overflow-y-auto transition-colors" 
+             data-graph-splitter-target="dropzone"
+             data-action="dragover->graph-splitter#handleDragOver drop->graph-splitter#handleDrop dragleave->graph-splitter#handleDragLeave">
+          <div class="nodes-list min-h-full"
+               data-action="dragover->graph-splitter#handleDragOver drop->graph-splitter#handleDrop">
+          </div>
+          <div class="empty-state text-gray-400 text-center py-8 hidden"
+               data-action="dragover->graph-splitter#handleDragOver drop->graph-splitter#handleDrop">
+            <i class="fa fa-inbox text-4xl mb-2"></i>
+            <p class="mb-0 text-sm">No nodes in this graph</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template data-graph-splitter-target="nodeTemplate">
+    <div class="node-item bg-white border border-gray-300 rounded mb-2 shadow-sm hover:shadow-md transition-shadow" 
+         draggable="true"
+         data-node-id=""
+         data-action="dragstart->graph-splitter#handleDragStart dragend->graph-splitter#handleDragEnd">
+      <div class="p-3 flex items-center cursor-move">
+        <i class="fa fa-grip-vertical text-gray-400 mr-3"></i>
+        <div class="flex-grow">
+          <div class="node-display-text font-semibold text-gray-800 text-sm"></div>
+          <small class="node-location text-gray-500 text-xs"></small>
+        </div>
+        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded ml-2 node-type"></span>
+      </div>
+    </div>
+  </template>
+</div>

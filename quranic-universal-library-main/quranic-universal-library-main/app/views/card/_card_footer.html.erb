@@ -1,0 +1,21 @@
+<%
+    show_tags = local_assigns[:show_tags] && (card.respond_to?(:tags) || card.respond_to?(:get_tags))
+    tags = show_tags ? card.try(:get_tags) || card.try(:tags) : []
+%>
+
+<div class="flex items-center justify-between">
+  <% if local_assigns[:show_stats] && card.respond_to?(:count) && card.count.to_i > 0 %>
+    <div class="text-white font-bold opacity-70">
+      <%= safe_html(card.stats) if card.respond_to?(:stats) %>
+    </div>
+    <div class="badge badge-resource">
+      <%= card.count %>
+    </div>
+  <% elsif show_tags %>
+    <div class="flex flex-wrap gap-2">
+      <% tags.each do |tag| %>
+        <%= render 'card/card-tag', tag: tag, tool: local_assigns[:tool] %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

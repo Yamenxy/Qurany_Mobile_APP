@@ -1,0 +1,326 @@
+<%
+  actions = []
+  if @verse.id > 1
+    actions << link_to('Previous ayah', word_text_proofreading_path(@verse.id - 1), class: 'btn btn-dark')
+  end
+  if @verse.id < 6236
+    actions << link_to('Next ayah', word_text_proofreading_path(@verse.id + 1), class: 'btn btn-dark')
+  end
+%>
+
+<%= render 'tools/header',
+           name: "Quran scripts",
+           title: "#{@verse.chapter.name_simple} - #{@verse.verse_number}",
+           key: 'quran_script',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Filter', path: word_text_proofreadings_path }]
+%>
+
+<%= render 'shared/page_font', verses: [@verse] %>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section">
+    <div class="flex flex-wrap gap-4">
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>QPC Nastaleeq</b>
+        <div class="qpc-nastaleeq quran-text" style="margin-top: 10px">
+          <%= @verse.text_qpc_nastaleeq_hafs %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Madinah Nastaleeq</b>
+        <div class="indopak-nastaleeq quran-text" style="margin-top: 10px"><%= @verse.text_qpc_nastaleeq %> </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Indopak Nastaleeq</b>
+
+        <div class="indopak-nastaleeq quran-text" style="margin-top: 10px">
+          <%= @verse.text_indopak_nastaleeq %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Indopak</b>
+
+        <div class="indopak quran-text" style="margin-top: 10px">
+          <%= @verse.text_indopak %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Uthmani</b>
+
+        <div class="me_quran quran-text" style="margin-top: 10px">
+          <%= @verse.text_uthmani %>
+        </div>
+      </div>
+
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Uthmani Simple</b>
+
+        <div class="me_quran quran-text" style="margin-top: 10px">
+          <%= @verse.text_uthmani_simple %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Imlaei</b>
+
+        <div class="me_quran quran-text" style="margin-top: 10px">
+          <%= @verse.text_imlaei %>
+        </div>
+      </div>
+
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Imlaei Simple</b>
+
+        <div class="me_quran quran-text" style="margin-top: 10px">
+          <%= @verse.text_imlaei_simple %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Imlaei Simple(new)</b>
+
+        <div class="me_quran quran-text" style="margin-top: 10px">
+          <% @verse.words.each do |w| %>
+            <%= w.text_imlaei_simple %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Digital Khatt</b>
+
+        <div class="quran-text digitalkhatt" style="margin-top: 10px">
+          <%= @verse.text_digital_khatt %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Digital Khatt v1</b>
+
+        <div class="quran-text digitalkhatt" style="margin-top: 10px">
+          <%= @verse.text_digital_khatt_v1 %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Digital Khatt Indopak</b>
+
+        <div class="quran-text digitalkhatt-indopak" style="margin-top: 10px">
+          <%= @verse.text_digital_khatt_indopak %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>KFGQPC Uthmani Hafs</b>
+        <div class="qpc-hafs quran-text" style="margin-top: 10px"><%= @verse.text_qpc_hafs %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>KFGQPC Uthmani Hafs(tajweed)</b>
+        <div class="qpc-hafs quran-text" style="margin-top: 10px"><%= @verse.text_uthmani_tajweed.to_s.html_safe %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>V4 Tajweed</b>
+        <div class="quran-text p<%= @verse.v2_page %>-v4-tajweed"
+             style="margin-top: 10px"
+             data-controller="tajweed-font"
+        >
+          <%= @verse.code_v2 %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>V1</b>
+        <div class="quran-text p<%= @verse.page_number %>-v1" style="margin-top: 10px"><%= @verse.code_v1 %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>V2</b>
+        <div class="quran-text p<%= @verse.v2_page %>-v2" style="margin-top: 10px"><%= @verse.code_v2 %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Sign language</b>
+        <div class="quran-text arabic-sign-font" style="margin-top: 10px"><%= @verse.text_indonesian_sign_language %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Misbah script</b>
+        <div class="quran-text misbah-font" style="margin-top: 10px"><%= @verse.text_indopak_misbah %></div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>Image</b>
+        <div style="margin-top: 10px" class="quran-text">
+          <img data-src="<%= @verse.image_url %>" data-controller="lazy-load"/>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>WBW SVG</b>
+        <div style="margin-top: 10px" class="quran-text flex">
+          <% @verse.words.order('position asc').each do |word| %>
+            <img data-src="<%= word.tajweed_svg_url %>" data-controller="lazy-load" style="max-height: 100px"/>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>WBW Tajweed v4 Images</b>
+        <div style="margin-top: 10px" class="quran-text flex">
+          <% @verse.words.order('position asc').each do |word| %>
+            <img data-src="<%= word.tajweed_v4_image_url %>" data-controller="lazy-load" style="max-height: 100px"/>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>WBW Corpus Images</b>
+        <div style="margin-top: 10px" class="quran-text flex">
+          <% @verse.words.order('position asc').each do |word| %>
+            <img data-src="<%= word.corpus_image_url %>" data-controller="lazy-load" style="max-height: 100px; margin-right: 10px"/>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-full section pb-3 border-b border-gray-300">
+        <b>WBW Tajweed(OLD) Images</b>
+        <div style="margin-top: 10px" class="quran-text flex">
+          <% @verse.words.order('position asc').each do |word| %>
+            <img data-src="<%= word.rq_tajweed_image_url %>" data-controller="lazy-load" style="max-height: 100px;"/>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-controller="mushaf-page" class="mushaf-wrapper page-section mb-3 mt-4">
+    <h2>Words</h2>
+    <div style="width: 100%;margin: 0 5px;text-align: center;direction: ltr;font-size: 20px">
+      Font size:
+      <input type="range" min="15" max="100" value="30" class="font-size-slider">
+    </div>
+
+    <div style="max-height: 500px;overflow-y: auto;">
+      <table class="w-full hover:bg-gray-50 mt-4 relative">
+        <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+        <tr>
+          <td>ID</td>
+          <td style="direction: rtl">IndoPak</td>
+          <td style="direction: rtl">Indopak Nastaleeq</td>
+          <td style="direction: rtl">Madinah Nastaleeq</td>
+          <td style="direction: rtl">QPC Nastaleeq</td>
+          <td>Digitak Khatt indopak</td>
+
+          <td style="direction: rtl">Uthmani</td>
+          <td style="direction: rtl">Uthmani Simple</td>
+          <td style="direction: rtl">Digital Khatt v1</td>
+          <td style="direction: rtl">V1</td>
+
+          <td style="direction: rtl">Digital Khatt v2</td>
+          <td style="direction: rtl">Imlaei</td>
+          <td style="direction: rtl">Imlaei Simple</td>
+          <td style="direction: rtl">KFGQPC Hafs</td>
+          <td style="direction: rtl;">KFGQPC Hafs tajweed</td>
+          <td style="direction: rtl">V4 Tajweed</td>
+
+          <td style="direction: rtl">V2</td>
+          <td>Sign language(ID)</td>
+          <td>Indopak Misbah</td>
+        </tr>
+        </thead>
+        <tbody>
+        <% @verse.words.order('position asc').each do |word| %>
+          <tr class="hover:bg-gray-200 border-b quran-text">
+            <td class="py-2 pl-2">
+              <%= link_to(word.location, [:cms, word], target: '_blank') %>
+            </td>
+
+            <td class="py-2 indopak char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_indopak %>
+            </td>
+
+            <td class="py-2 indopak-nastaleeq char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_indopak_nastaleeq %>
+            </td>
+
+            <td class="py-2 indopak-nastaleeq char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_qpc_nastaleeq %>
+            </td>
+
+            <td class="py-2 qpc-nastaleeq char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_qpc_nastaleeq_hafs %>
+            </td>
+
+            <td class="py-2 digitalkhatt-indopak char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_digital_khatt_indopak %>
+            </td>
+            <td class="py-2 me_quran char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_uthmani %>
+            </td>
+            <td class="py-2 me_quran char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_uthmani_simple %>
+            </td>
+            <td class="py-2 digitalkhatt char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_digital_khatt_v1 %>
+            </td>
+
+            <td class="py-2 p<%= word.page_number %>-v1 char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.code_v1 %>
+            </td>
+
+            <td class="py-2 digitalkhatt char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_digital_khatt %>
+            </td>
+
+            <td class="py-2 me_quran char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_imlaei %>
+            </td>
+
+            <td class="py-2 me_quran char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_imlaei_simple %>
+            </td>
+
+            <td class="py-2 qpc-hafs char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_qpc_hafs %>
+            </td>
+
+            <td class="py-2 qpc-hafs char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_uthmani_tajweed.to_s.html_safe %>
+            </td>
+
+            <td class="py-2 p<%= @verse.v2_page %>-v4-tajweed char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.code_v2 %>
+            </td>
+
+            <td class="py-2 p<%= word.v2_page %>-v2 char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.code_v2 %>
+            </td>
+
+            <td class="py-2 <%= word.word? ? 'arabic-sign-font' : 'misbah-font' %> char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_indonesian_sign_language %>
+            </td>
+
+            <td class="py-2 misbah-font char cursor-pointer" data-controller="copy-to-clipboard">
+              <%= word.text_indopak_misbah %>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2">
+    <%= link_to('Previous ayah', word_text_proofreading_path(@verse.id - 1), class: 'btn btn-dark') if @verse.id > 1 %>
+    <%= link_to('Next ayah', word_text_proofreading_path(@verse.id + 1), class: 'btn btn-dark') if @verse.id < 6236 %>
+  </div>
+</div>

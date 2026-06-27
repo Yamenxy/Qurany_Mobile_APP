@@ -1,0 +1,42 @@
+<div id="resources" class="bg-white">
+  <div class="container max-w-7xl mx-auto px-4 pt-[80px] pb-16">
+    <div class="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
+      <aside class="hidden lg:block">
+        <div class="sticky top-[88px] max-h-[calc(100vh-104px)] overflow-y-auto pe-2 pb-8">
+          <%= render "community/docs_sidebar", category: @docs_category %>
+        </div>
+      </aside>
+
+      <div class="min-w-0">
+        <details class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 lg:hidden">
+          <summary class="cursor-pointer text-sm font-semibold text-gray-700">Browse documentation</summary>
+          <div class="mt-4">
+            <%= render "community/docs_sidebar", category: @docs_category %>
+          </div>
+        </details>
+
+        <nav class="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-gray-500" aria-label="Breadcrumb">
+          <a href="<%= docs_index_path %>" class="hover:text-gray-800">Docs</a>
+          <% if @docs_category.present? %>
+            <span class="text-gray-300">/</span>
+            <a href="<%= docs_path(@docs_category.slug) %>" class="hover:text-gray-800"><%= @docs_category.title %></a>
+          <% end %>
+          <% if @docs_source == :markdown && @docs_page.present? && @docs_page.slug != @docs_category&.slug %>
+            <span class="text-gray-300">/</span>
+            <span class="font-medium text-gray-700"><%= @docs_page.title %></span>
+          <% end %>
+        </nav>
+
+        <article class="tw-docs space-y-4">
+          <% if @docs_source == :markdown %>
+            <%= safe_html @docs_page.html %>
+          <% elsif @docs_source == :tag %>
+            <%= render partial: "docs/tag", locals: { tag: @docs_tag } %>
+          <% elsif @docs_source == :partial %>
+            <%= render partial: "docs/#{@docs_partial}" %>
+          <% end %>
+        </article>
+      </div>
+    </div>
+  </div>
+</div>

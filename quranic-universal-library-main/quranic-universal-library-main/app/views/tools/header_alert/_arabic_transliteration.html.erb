@@ -1,0 +1,24 @@
+<div class="px-4 py-3 rounded mb-4 bg-gray-100 border border-gray-400 text-gray-700 flex relative" role="alert" data-controller="alert">
+  <i class="fa fa-info-circle me-2 fa-2x"></i>
+  <div>
+    <p>
+      <strong>
+       Arabic transliteration tool
+      </strong>
+    </p>
+
+    <p>
+      The Arabic Transliteration Tool is used to prepare accurate Arabic transliterations by breaking down Arabic words into syllables.
+      This tool is particularly useful for learning and teaching Arabic pronunciation, making it easier for non-Arabic speakers to read and pronounce Arabic words accurately.
+    </p>
+
+    <p>
+      If you'd like to contribute to this amazing resource, simply click the link below to request access from the admin. Once approved, you'll have the access to report and fix transliteration.
+    </p>
+
+    <p id="btn-request-permission">
+      <%= link_to 'Request Access', '_', class: 'btn btn-dark',  data: { controller: 'ajax-modal', url: new_user_project_path(resource_id: @resource.id, modal: true), css_class: 'modal-lg'} %>
+    </p>
+  </div>
+</div>
+

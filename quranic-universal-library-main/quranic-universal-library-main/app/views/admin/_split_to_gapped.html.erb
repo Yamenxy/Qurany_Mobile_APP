@@ -1,0 +1,83 @@
+<%
+  ayah_recitations = resource.reciter&.verse_recitations || []
+%>
+
+<div id=title>
+  Split <%= resource.name %> recitations to ayah by ayah
+</div>
+
+<div id="body">
+  <div class="p-6" id=modal-body>
+    <% if ayah_recitations.present? %>
+      <div class="px-4 py-3 rounded mb-4 bg-red-100 border border-red-400 text-red-700">
+        We have following ayah recitations for this reciter.
+
+        <ul>
+          <% ayah_recitations.each do |r| %>
+            <li>
+              <a href="<%= cms_recitation_path(r) %>" target="_blank"><%= r.name %></a>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with url: split_to_gapped_cms_audio_recitation_path(resource), method: :put do |form| %>
+      <div class="px-4 py-3 rounded mb-4 bg-blue-100 border border-blue-400 text-blue-700">
+        This feature allows you to convert Surah segments into individual ayahs and,
+        if enabled, divide the audio files to ayah by ayah as well.
+        The generated audio files will be shared with you via email for manual upload to storage.
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :divide_audio, 'Divide Audio File' %>
+        <%= form.check_box :divide_audio %>
+
+        <div class="text-sm text-gray-600 mt-1">
+          If checked, system will divide the audio file to ayah by ayah for selected surah.
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :host, 'Audio host' %>
+        <%= form.text_field :host, class: 'form-control', value: "https://audio-cdn.tarteel.ai/quran/#{resource.name.gsub(/\s+/, '')}" %>
+        <div class="text-sm text-gray-600 mt-1">
+          Please provide based CDN host for audio files
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :surah, 'Split specific surah' %>
+        <%= form.text_field :surah, class: 'form-control' %>
+        <div class="text-sm text-gray-600 mt-1">
+          Enter surah number if you want to only split specific surah
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :ayah_from, 'Ayah range from' %>
+        <%= form.text_field :ayah_from, class: 'form-control' %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :ayah_to, 'Ayah range to' %>
+        <%= form.text_field :ayah_to, class: 'form-control' %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :ayah_recitation_id, 'Enter ayah recitation ID' %>
+        <%= form.number_field :ayah_recitation_id %>
+      </div>
+
+      OR
+      <div class="mb-4">
+        <%= form.label :create_ayah_recitation, 'Create new ayah recitation' %>
+        <%= form.check_box :create_ayah_recitation %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.submit 'Split recitation' %>
+      </div>
+    <% end %>
+  </div>
+</div>

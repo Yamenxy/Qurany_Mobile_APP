@@ -1,0 +1,21 @@
+.flex-between{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-item{
+  .selected{
+    background: #cacaca;
+  }
+}
+
+.label-text {
+  width: max-content;
+}
+
+pre{
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

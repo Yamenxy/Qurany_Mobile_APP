@@ -1,0 +1,13 @@
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <%= render SplitScreenComponent.new do |component| %>
+    <%= component.with_left do %>
+      <%= render 'shared/pdf_or_archive_embed' %>
+    <% end %>
+
+    <%= component.with_right do %>
+      <div class="page-wrapper p-3">
+        <%= render 'ayah_view' %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

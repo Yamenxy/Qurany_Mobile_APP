@@ -1,0 +1,28 @@
+<%
+  data = generate_ayah_mastery_quiz
+  verse = data[:verse]
+%>
+
+<h2 class="heading my-3 text-3xl font-bold text-center mb-6 text-gray-800">Ayah Mastery Challenge</h2>
+
+<div class="quiz" data-controller="activities--ayah-mastery" data-ayah="<%= verse.verse_key %>">
+  <div class="px-6 py-5 rounded-lg mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md">
+    <div class="text-center mb-3">
+      <div class="inline-block px-4 py-2 rounded-full bg-blue-500 text-white text-sm font-semibold mb-3">
+        Identify the Source
+      </div>
+      <p class="text-sm font-medium text-gray-600 mb-3">Which surah and ayah number is this from?</p>
+    </div>
+    <div class="qpc-hafs text-2xl leading-relaxed text-center text-gray-800 px-4 py-3 bg-white rounded-lg shadow-sm">
+      <%= data[:text] %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6" id="options">
+    <% data[:options].each do |option| %>
+      <button class="ayah-option px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 option border-0" data-correct="<%= option[:correct] %>">
+        <%= option[:name] %>
+      </button>
+    <% end %>
+  </div>
+</div>

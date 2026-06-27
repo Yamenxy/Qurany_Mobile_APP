@@ -1,0 +1,21 @@
+<%
+  words = ayah.words.includes(:root).order('words.position ASC')
+%>
+
+<div class="p-6 rounded-xl bg-white shadow max-w-2xl mx-auto">
+  <div class="flex flex-wrap gap-3 justify-start quran-text">
+    <% words.each do |word| %>
+      <div class="bg-gray-50 p-2 rounded-lg border border-gray-200 text-center min-w-[5rem] qpc-hafs">
+        <div class="text-lg text-gray-800 mb-2 p-2">
+          <%= word.text_qpc_hafs %>
+        </div>
+
+        <div class="text-sm text-gray-600">
+          <% if word.root %>
+            <%= link_to word.root.arabic_trilateral, morphology_root_path(word.root.arabic_trilateral), data: {controller: 'ajax-modal', css_class: 'modal-lg', url: morphology_root_path(word.root.arabic_trilateral)} %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

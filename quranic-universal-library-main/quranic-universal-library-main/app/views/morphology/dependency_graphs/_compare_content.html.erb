@@ -1,0 +1,51 @@
+<%= turbo_frame_tag "treebank_compare_content" do %>
+  <div class="mt-4">
+    <% if @compare_mode %>
+      <div id="treebank-compare-layout" class="flex flex-row gap-0" data-controller="resizeable">
+        <div id="left-side" class="w-1/2 min-w-[300px]">
+          <div class="bg-gray-100 rounded min-h-[300px] syntax-graph-container overflow-auto"
+               data-controller="syntax-graph draggable-scroll"
+               data-action="mousedown->draggable-scroll#mouseDownHandler"
+               data-syntax-graph-url-value="<%= syntax_graph_morphology_dependency_graph_path(@graph, locale: @locale) %>"
+               id="main-syntax-graph">
+            <div data-syntax-graph-target="container" class="text-gray-500">Loading syntax graph...</div>
+          </div>
+        </div>
+        <div id="resize-handler" class="w-2 bg-gray-300 hover:bg-gray-400 cursor-col-resize"></div>
+        <div id="right-side" class="w-1/2 min-w-[300px]">
+          <div class="bg-gray-100 rounded min-h-[300px] overflow-auto"
+               data-controller="draggable-scroll"
+               data-action="mousedown->draggable-scroll#mouseDownHandler">
+            <div class="p-4">
+              <div class="flex items-center justify-between gap-4 flex-wrap">
+                <div class="text-sm text-gray-600">
+                  <a class="text-blue-600 underline"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     href="https://corpus.quran.com/treebank.jsp?chapter=<%= (@chapter_number || 1) %>&verse=<%= (@verse_number || 1) %>">
+                    Open Quran Corpus treebank
+                  </a>
+                </div>
+              </div>
+              <div class="mt-3 inline-block bg-white rounded">
+                <img class="max-w-none h-auto"
+                     alt="Quran Corpus treebank"
+                     src="https://corpus.quran.com/graphimage?id=<%= @corpus_graph_image_id %>">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div
+        data-turbo=false
+        class="bg-gray-100 rounded min-h-[300px] syntax-graph-container overflow-auto"
+           data-controller="syntax-graph"
+           data-syntax-graph-url-value="<%= syntax_graph_morphology_dependency_graph_path(@graph, locale: @locale) %>"
+           id="main-syntax-graph">
+        <div data-syntax-graph-target="container" class="text-gray-500">Loading syntax graph...</div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+

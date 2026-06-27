@@ -1,0 +1,82 @@
+@import "shared/variables";
+
+@import "libs/actiontext";
+@import "components/splash";
+@import "components/wraper";
+//@import "components/keyboard";
+@import "components/common";
+@import "components/resources";
+@import "components/proofreading_view";
+@import "shared/mushaf_page";
+@import "shared/tajweed";
+@import "shared/tajweed_color_new";
+@import "shared/content";
+@import "shared/diffy";
+@import "shared/corpus";
+@import "components/pdf_preview";
+@import "components/mutashabihat";
+@import "components/tajweed_rules";
+@import "components/transliteration";
+@import "components/credit";
+@import "components/faq";
+@import "components/quiz";
+@import "components/word_match";
+@import "select2/dist/css/select2";
+@import "libs/toastr";
+@import "landing_page";
+@import "components/tools_help";
+@import "components/segment_player";
+@import "components/syntax_graph";
+@import "components/treebank_edit";
+@import "components/mushaf_pages_table";
+
+html,
+body {
+  height: 100%;
+}
+
+.select2-container .select2-selection--single {
+  height: 38px !important;
+}
+.select2-selection__rendered {
+  line-height: 38px !important;
+}
+.select2-selection__clear,
+.select2-selection__arrow {
+  height: 38px !important;
+}
+
+.select2-search__field:focus {
+  outline: none !important;
+}
+
+.form-floating {
+  .select2-container {
+    padding: 17px 0 0 5px;
+  }
+  .select2-selection {
+    border: none;
+  }
+}
+
+.narrow-container {
+  @media (min-width: $screen-md) {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 700px !important;
+  }
+
+  @media (min-width: 920px) {
+    max-width: 900px !important;
+  }
+}
+
+[class^="btn"]:hover {
+  //  color: inherit;
+}
+
+@media (max-width: 640px) {
+  .tools-table-overflow {
+    overflow-x: auto;
+  }
+}

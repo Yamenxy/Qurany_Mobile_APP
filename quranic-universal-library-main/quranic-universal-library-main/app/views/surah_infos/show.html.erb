@@ -1,0 +1,45 @@
+<%
+  actions = []
+  resource = @presenter.resource
+  resource_content = resource.resource_content
+
+  if @access
+    actions << link_to('Edit', edit_surah_info_path(resource.id), class: 'btn btn-success')
+  end
+
+  if resource.chapter_id > 1 && (previous_info = resource.previous_surah_info)
+    actions << link_to('Previous Surah', surah_info_path(previous_info.id), class: 'btn btn-dark')
+  end
+
+  if resource.chapter_id < 114 && (next_info = resource.next_surah_info)
+    actions << link_to('Next Surah', surah_info_path(next_info.id), class: 'btn btn-dark')
+  end
+
+%>
+
+<%= render 'tools/header',
+           name: 'Surah Information',
+           title: "#{resource_content.name} For Surah #{resource.chapter.name_simple}",
+           key: 'surah_info',
+           actions: actions,
+           resource: resource_content,
+           breadcrumb_parents: [{ label: 'Surah information', path: surah_infos_path(resource_id: resource_content.id) }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <h2 class="text-2xl">Short text</h2>
+
+  <div class="page-section mb-4">
+    <div lang=<%= resource.language.iso_code %>>
+      <%= resource.short_text.presence || 'N/A' %>
+    </div>
+  </div>
+
+  <h2 class="text-2xl">Full Surah info</h2>
+  <div class="page-section">
+    <div lang=<%= resource.language.iso_code %>>
+      <%= safe_html resource.text %>
+    </div>
+  </div>
+</div>
+

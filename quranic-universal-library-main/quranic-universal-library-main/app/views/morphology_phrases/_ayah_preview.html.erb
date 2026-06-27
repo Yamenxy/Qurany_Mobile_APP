@@ -1,0 +1,64 @@
+<%
+  verse = mapping[:verse]
+  words = verse.words
+  ayah_phrases = mapping[:phrase_verses]
+  approved_phrases = ayah_phrases.approved.joins(:phrase).select do |p|
+    p.phrase.approved && p.phrase.review_status == 'new' && p.phrase.word_position_from && p.phrase.words_count >= 3
+  end
+
+  phrase_groups = {}
+
+  words.each do |w|
+    selected_phrase = approved_phrases.detect do |p|
+      if p.word_position_from && p.word_position_to
+        w.position >= p.word_position_from && w.position <= p.word_position_to
+      end
+    end
+
+    if selected_phrase
+      phrase_groups[selected_phrase.phrase] ||= []
+      phrase_groups[selected_phrase.phrase].push(w)
+    else
+      phrase_groups[w.id] = w
+    end
+  end
+%>
+
+<div class="space-y-6">
+  <div class="flex flex-col items-end">
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-600 text-white">
+      <%= verse.verse_key %>
+    </span>
+    <div class="quran-text qpc-hafs flex flex-wrap gap-x-1 mt-3 text-2xl leading-relaxed text-right justify-end">
+      <% phrase_groups.each do |key, group| %>
+        <% if key.is_a?(Morphology::Phrase) %>
+          <%
+            title = key.phrase_verses.approved.map &:text
+            title = title.join("<br/>").html_safe
+          %>
+          <span title="(<%= key.id %>: <%= key.source_verse.verse_key %>)<%= key.text_qpc_hafs %> <span class='bg-blue-100 text-blue-800 px-1 rounded text-xs'><%= key.occurrence %></span> <%= title %>"
+                class="phrase inline-flex mr-1"
+                data-controller="tooltip"
+                style="color: <%= key.get_color %>">
+            <% group.each do |w| %>
+              <span><%= w.text_qpc_hafs %></span>
+            <% end %>
+          </span>
+        <% else %>
+          <span class="text-gray-900">
+            <%= group.text_qpc_hafs %>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-200 pt-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-600 text-white">Phrases</span>
+    </h3>
+    <div class="space-y-3">
+      <%= render partial: 'phrase_verse', collection: ayah_phrases.sort_by { |s| -s.score }, as: :phrase_verse %>
+    </div>
+  </div>
+</div>

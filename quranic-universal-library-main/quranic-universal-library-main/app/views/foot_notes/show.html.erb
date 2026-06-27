@@ -1,0 +1,15 @@
+<div id=title>
+  <%= @foot_note.id %>
+</div>
+
+<div id="body">
+  <div class="p-6 <%= @foot_note.language_name %>">
+  <div>
+    <%= safe_html @foot_note.try(:draft_text) %>
+  </div>
+
+  <div>
+    <%= safe_html @foot_note.try(:text) %>
+  </div>
+  </div>
+</div>

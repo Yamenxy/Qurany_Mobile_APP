@@ -1,0 +1,189 @@
+.tajweed-rule-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+
+  &.izhar {
+    background: darkgreen;
+  }
+
+  &.izhar_shafawi{
+    background: blue;
+  }
+
+  &.ham_wasl, &.slnt, &.laam_shamsiyah {
+    background: #AAAAAA;
+  }
+
+  &.ikhafa_shafawi {
+    background: #D500B7;
+  }
+
+  &.ikhafa {
+    background: #9400A8;
+  }
+
+  &.qalaqah{
+    background: #009EE6;
+  }
+
+  &.iqlab {
+    background: #26BFFD;
+  }
+
+  &.idgham_ghunnah{
+    background: #169200;
+  }
+
+  &.idgham_wo_ghunnah {
+    background: #169200;
+  }
+
+  &.idgham_shafawi {
+    background: #58B800;
+  }
+
+  &.ghunnah{
+    background: #FF7E1E;
+  }
+
+  &.tafkheem{
+    background: #006994;
+  }
+
+  &.madda_obligatory_mottasel, &.madda_obligatory_monfasel {
+    background: #F2007F;
+  }
+
+  &.madda_normal {
+    background: #537FFF;
+  }
+
+  &.madda_permissible {
+    background: #F38E02;
+  }
+
+  &.madda_necessary {
+    background: darkblue;
+  }
+}
+
+.tajweed-new {
+  .tafkheem{
+    color: #006994;
+  }
+
+  .izhar {
+    // usually it's black text in tajweed mushaf but we want to highlight the rule
+    color: darkgreen;
+  }
+
+  .izhar_shafawi{
+     color: blue
+  }
+
+  .ikhafa_shafawi {
+    color: #D500B7;
+
+    &:hover {
+      background-color: #F0A6E6;
+      color: #D500B7;
+    }
+  }
+
+
+  .ham_wasl, .slnt, .laam_shamsiyah {
+    color: #AAAAAA;
+
+    &:hover {
+      background-color: #D7D7D7;
+    }
+  }
+
+  .madda_normal {
+    color: #537FFF;
+  }
+
+  .madda_permissible {
+    color: #F38E02;
+  }
+
+  .madda_necessary {
+    color: #A9045C;
+  }
+
+  .madda_obligatory, .madda_obligatory_mottasel, .madda_obligatory_monfasel {
+    color: #F2007F;
+  }
+
+  .qalaqah {
+    color: #009EE6;
+
+    &:hover {
+      background-color: #B3DEF4;
+      color: #009EE6;
+    }
+  }
+
+  .ikhafa {
+    color: #9400A8;
+
+    &:hover {
+      background-color: #DAA6E1;
+      color: #9400A8;
+    }
+  }
+
+  .iqlab {
+    color: #26BFFD;
+
+    &:hover {
+      background-color: #92E5FF;
+      color: #0099C5;
+    }
+  }
+
+  .idgham_shafawi {
+    color: #58B800;
+
+    &:hover {
+      background-color: #BAE890;
+      color: #58B800;
+    }
+  }
+
+  .idgham_ghunnah {
+    color: #169200;
+
+    &:hover {
+      background-color: #9CE58E;
+      color: #169200;
+    }
+  }
+
+  .idgham_wo_ghunnah {
+    color: #169200;
+
+    &:hover {
+      background-color: #9CE58E;
+      color: #169200;
+    }
+  }
+
+  .idgham_mutajanisayn, .idgham_mutaqaribayn {
+    color: #A1A1A1;
+
+    &:hover {
+      background-color: #D7D7D7;
+    }
+  }
+
+  .ghunnah {
+    color: #FF7E1E;
+
+    &:hover {
+      background-color: #FF7E1E;
+      color: black;
+    }
+  }
+}

@@ -1,0 +1,5 @@
+recitations = @presenter.ayah_recitations
+
+json.recitations do
+  json.array! recitations, partial: 'ayah_recitation'
+end

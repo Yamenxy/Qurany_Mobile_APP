@@ -1,0 +1,17 @@
+<div class="sidescroll-container">
+  <h2 class="text-3xl md:text-5xl text-white font-title">Developer Resources</h2>
+</div>
+<div class="mt-10">
+  <%= render 'card/card_sidescrolling_container' do %>
+    <% featured_developer_resources.each do |card| %>
+      <%= render 'card/card-container', card: card do %>
+        <%= render 'card/card_content', card: card, show_stats: true %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>
+<div class="sidescroll-container">
+  <p class="mt-10">
+    <%= link_to 'VIEW ALL DEVELOPER RESOURCES', resources_path, class: 'text-white opacity-70 font-semibold hover:opacity-100 hover:text-white transition-opacity duration-300' %>
+  </p>
+</div>

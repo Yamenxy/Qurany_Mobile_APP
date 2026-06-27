@@ -1,0 +1,30 @@
+<div id=title>
+ <%= @resource.name %>(<%= @resource.id %>) draft tafsir validation report(<%= @issues.size %> issues)
+</div>
+
+<div id="body">
+  <div class="p-6">
+    <ol class="list-group list-group-numbered">
+      <% if @issues.size.zero? %>
+        <li class="list-group-item flex">
+          <div class="flex items-start w-full">
+            <div class="ml-2 mr-auto">
+              We're good alhumudAllah, no issue found.
+            </div>
+          </div>
+        </li>
+      <% else %>
+        <% @issues.each do |issue| %>
+          <li class="list-group-item flex">
+            <div class="flex justify-between items-start w-full">
+              <div style="width: 20px; height: 20px" class="<%= issue[:severity]%>"></div>
+              <div class="ml-2 mr-auto">
+                <%= issue[:text] %>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      <% end %>
+    </ol>
+  </div>
+</div>

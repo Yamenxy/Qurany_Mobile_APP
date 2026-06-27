@@ -1,0 +1,27 @@
+<%
+  translations = Translation.where(
+    resource_content_id: @resource.id,
+    page_number: verse.page_number
+  ).order('verse_id ASC')
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="flex justify-center">
+    <div>
+      <% translations.each do |ayah_translation| %>
+        <div class="p-2">
+          <div class="qpc-hafs">
+            <%= ayah_translation.verse.text_qpc_hafs %>
+          </div>
+
+          <div class="my-2">
+            <%= safe_html ayah_translation.text %>
+            <span class="badge badge-pill badge-success">
+            <%= ayah_translation.verse_key %>
+          </span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

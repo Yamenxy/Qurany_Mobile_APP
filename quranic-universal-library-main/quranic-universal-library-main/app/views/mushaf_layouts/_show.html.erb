@@ -1,0 +1,73 @@
+<%= render 'tools/header',
+           name: @mushaf.name,
+           key: 'mushaf_layouts',
+           help: 'mushaf_layout',
+           breadcrumb_parents: [{ label: 'Mushaf layouts', path: mushaf_layouts_path }]
+%>
+
+<%= render 'shared/access_message' %>
+
+<%= turbo_frame_tag 'resources' do %>
+  <div class="page-wrapper container max-w-7xl mx-auto px-4">
+    <div class="page-section">
+      <div class="mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p class="text-sm text-gray-700 mb-2">
+            This mushaf has <strong><%= @mushaf.pages_count %></strong> pages,
+            <strong><%= @mushaf.lines_per_page %></strong> lines per page.
+            <span class="font-semibold">Workflow for each page is:</span>
+          </p>
+
+          <div class="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+            <span class="font-medium">Step 1: Set Ayah Range</span>
+            <span class="text-blue-500">→</span>
+            <span class="font-medium">Step 2: Assign Line Numbers</span>
+            <span class="text-blue-500">→</span>
+            <span class="font-medium">Step 3: Fix Line Alignment</span>
+            <span class="text-blue-500">→</span>
+            <span class="font-medium">Step 4: Preview</span>
+          </div>
+        </div>
+
+        <p class="text-gray-600 text-base">
+          Table below is showing all the pages with their current status.
+        </p>
+      </div>
+      <div class="sticky top-0 z-20 bg-white pb-4 mb-4 border-b border-gray-200">
+        <%= form_with url: mushaf_layout_path(@mushaf.id), method: :get do |f| %>
+          <div class="flex gap-2">
+            <%= f.search_field :search,
+                               value: params[:search],
+                               placeholder: "Search by page number or ayah (e.g., 20 or 2:5)...",
+                               class: "form-control flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+            <%= f.hidden_field :sort_key, value: params[:sort_key] %>
+            <%= f.hidden_field :sort_order, value: params[:sort_order] %>
+            <%= f.submit 'Search', class: 'btn btn-success' %>
+
+            <% if params[:search].present? %>
+              <%= link_to 'Clear', mushaf_layout_path(@mushaf.id, sort_key: params[:sort_key], sort_order: params[:sort_order]), class: 'btn btn-secondary', data: { turbo_frame: 'pages_table' } %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <div class="tools-table-overflow">
+        <table class="w-full hover:bg-gray-50">
+          <thead class="sticky z-10 bg-white border-b-2 border-black" style="top: 42px;">
+          <tr>
+            <th class="py-3 px-4 text-left">
+              <%= sort_order_link 'Page #', :page_number %>
+            </th>
+            <th class="py-3 px-4 text-left">Ayah Range</th>
+            <th class="py-3 px-4 text-left">Status</th>
+            <th class="py-3 px-4 text-left">Actions</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <%= render partial: 'page_row', collection: @pages, as: :page %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% end %>

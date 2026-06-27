@@ -1,0 +1,141 @@
+<%= render 'layouts/qul_head' %>
+
+<%= render 'layouts/grid' do %>
+  <div class="mb-5 mt-6">
+    <h1 class="text-2xl md:text-3xl">
+      Credits
+    </h1>
+
+    <p class="mt-6">
+      We extend our heartfelt gratitude to the various community projects and members whose contributions have been
+      instrumental in shaping QUL. The majority of the resources currently available in QUL were created or curated by
+      the community, not Tarteel. As you make use of QUL, please remember to keep all of these contributors in your
+      prayers. May Allah accept and reward the efforts of everyone involved and make this a means for us to continue
+      serving the ummah for generations to come.
+    </p>
+
+    <div class="mt-8 text-center">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+        Want to be part of this beautiful journey?
+      </h2>
+
+      <div class="text-sm text-gray-500 mb-8">
+        Whether you're a developer or passionate about Quranic content, we’d love to hear from you. Just open a new
+        issue on Github using the link below, and we’ll get back to you as soon as possible.
+      </div>
+
+      <a href="https://github.com/TarteelAI/quranic-universal-library/issues/new/choose" class="btn btn-cta">
+        Contribute
+      </a>
+    </div>
+
+    <div class="mx-auto py-12">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <% @contributors.each do |contributor| %>
+          <%= link_to contributor.url, target: :_blank, class: 'contributor-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg border border-gray-300' do %>
+            <div class="p-6 flex flex-col items-center">
+              <div class="avatar mb-4 rounded-full overflow-hidden w-24 h-24 border-4">
+                <%= image_tag contributor.logo, alt: contributor.name, class: 'w-full h-full object-cover' %>
+              </div>
+
+              <h3 class="text-xl font-semibold text-gray-900 mb-2 text-center">
+                <%= contributor.name %>
+              </h3>
+
+              <div class="text-gray-500 text-sm text-center mb-4">
+                <%== contributor.description.to_s %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <p class="mt-3 font-semibold">
+      Within the limitations of our knowledge and respecting the privacy of those who desire it, we wish to specifically
+      acknowledge the following individuals and groups for their contributions:
+    </p>
+
+    <div class="mt-4 mt-md-4">
+      <ul class="credits-list">
+        <% contributors.each do |contributor| %>
+          <li>
+            <% if contributor[:multiple] %>
+              <% contributor[:multiple].each_with_index do |entity, index| %>
+                <% if entity[:url] %>
+                  <%= link_to entity[:name], entity[:url], target: '_blank', class: "!underline" %>
+                <% else %>
+                  <b><%= entity[:name] %></b>
+                <% end %>
+                <% if index < contributor[:multiple].length - 1 %>
+                  <% if index == contributor[:multiple].length - 2 %>
+                    and
+                  <% else %>
+                    ,
+                  <% end %>
+                <% end %>
+              <% end %>
+            <% elsif contributor[:url] %>
+              <%= link_to contributor[:name], contributor[:url], target: '_blank', class: "!underline" %>
+            <% else %>
+              <b><%= contributor[:name] %></b>
+            <% end %>
+            <%= contributor[:description] %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="mb-5 mt-6">
+      <p class="mt-3 md:mt-0">QUL is more than just a resource library; it's a community-driven platform designed
+        to
+        streamline and enhance the creation of Quranic solutions.</p>
+      <p class="md:pb-3">Explore <a href="/" class="text-gray-900 hover:text-gray-700 hover:underline text-decoration-underline fw-bold">QUL</a>
+        today
+        and see how it can support your projects and contribute to the broader Islamic community!</p>
+    </div>
+
+    <div class="mt-8 pb-5 text-center">
+      <a href="https://github.com/TarteelAI/quranic-universal-library/issues/new/choose" class="btn btn-cta">
+        Contribute
+      </a>
+    </div>
+
+    <% if @github_contributors.present? %>
+      <div class="mt-12 border-t border-gray-200 pt-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
+          Code Contributors
+        </h2>
+        <p class="text-gray-600 text-center mb-8">
+          Special thanks to our amazing developers who have contributed code to this project:
+        </p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <% @github_contributors.each do |contributor| %>
+            <div class="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <a href="<%= contributor[:html_url] %>" target="_blank" class="flex flex-col items-center text-center">
+                <img src="<%= contributor[:avatar_url] %>" 
+                     alt="<%= contributor[:login] %>" 
+                     class="w-16 h-16 rounded-full mb-2 border-2 border-gray-200">
+                <span class="text-sm font-medium text-gray-900 mb-1">
+                  <%= contributor[:login] %>
+                </span>
+                <span class="text-xs text-gray-500">
+                  <%= pluralize(contributor[:contributions], 'contribution') %>
+                </span>
+              </a>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="text-center mt-6">
+          <a href="https://github.com/TarteelAI/quranic-universal-library/graphs/contributors" 
+             target="_blank" 
+             class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+            View all contributors on GitHub →
+          </a>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

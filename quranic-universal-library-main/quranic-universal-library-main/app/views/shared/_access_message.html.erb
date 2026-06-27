@@ -1,0 +1,13 @@
+<% if @access && @access.admin_notes.present? %>
+  <div class="container max-w-7xl mx-auto px-4">
+    <div class="callout px-4 py-3 rounded mb-4 alert-dismissible <%= 'callout-warning' %> relative" role="alert" data-controller="alert">
+      <div class="flex flex-wrap gap-4">
+        <div class="w-full">
+          <div style="font-size: 30px; margin-top: 10px">
+            <%= safe_html @access.admin_notes %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

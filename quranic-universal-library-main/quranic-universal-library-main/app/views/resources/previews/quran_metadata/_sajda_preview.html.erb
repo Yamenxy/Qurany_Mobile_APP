@@ -1,0 +1,42 @@
+<%
+  verses = Verse.unscoped.order('sajdah_number asc').where.not(sajdah_number: nil)
+%>
+
+<div class="space-y-6 text-gray-800 text-base leading-relaxed">
+  <h1 class="text-2xl font-bold mb-4">
+    Ayahs with Sajdah in Quran
+  </h1>
+
+  <div class="space-y-4 mt-6">
+    <% verses.each do |verse| %>
+      <div class="border border-gray-200 rounded-xl p-4 shadow-sm bg-white">
+        <div class="flex gap-2 items-center mb-2">
+          <div class="text-sm font-semibold">
+            Ayah: <%= verse.verse_key %>
+          </div>
+
+          <% color_class =
+               case verse.sajdah_type.downcase
+               when "required"
+                 "bg-red-100 text-red-800"
+               when "optional"
+                 "bg-green-100 text-green-800"
+               else
+                 "bg-gray-100 text-gray-800"
+               end
+          %>
+
+          <div class="inline-block text-xs font-semibold <%= color_class %> px-2 py-0.5 rounded-full">
+            <%= verse.sajdah_type.capitalize %>
+          </div>
+        </div>
+
+        <div class="qpc-hafs text-lg leading-relaxed font-arabic mt-2 text-right">
+          <%= verse.text_qpc_hafs %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+

@@ -1,0 +1,20 @@
+<%
+  patterns = (1..10).to_a
+%>
+
+<div class="col-span-12 lg:col-start-2 lg:col-span-12 mt-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4" >
+    <% @tools.each do |card| %>
+      <% search_term = "#{card.title.downcase} #{card.description.to_s.downcase} #{card.tags.join(' ').downcase}"  %>
+
+      <%= render 'card/card-container', card: card, patterns: patterns, data: { turbo_frame: '_top', search: search_term } do %>
+        <%= render 'card/card_content',
+                   card: card,
+                   show_learn_more: true,
+                   show_tags: true,
+                   tool: true
+        %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

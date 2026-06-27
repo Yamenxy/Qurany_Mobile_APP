@@ -1,0 +1,38 @@
+<%= turbo_frame_tag :ayah_theme do %>
+  <div dir="rtl" class="qpc-hafs text-3xl leading-relaxed text-right bg-white border border-gray-200 rounded p-5 mb-4">
+    <%= @ayah.text_qpc_hafs %>
+  </div>
+
+  <% theme = @presenter.ayah_theme %>
+  <% ayahs = @presenter.ayah_theme_ayahs %>
+
+  <% if theme.present? %>
+    <% if ayahs.size > 1 %>
+      <div class="bg-emerald-50 border border-emerald-200 rounded p-4">
+        <div class="text-sm font-semibold text-emerald-900">
+          This theme is for <%= ayahs.size %> ayahs from <%= ayahs.first.verse_key %> to <%= ayahs.last.verse_key %>
+        </div>
+        <div class="mt-3 bg-white/70 border border-emerald-100 rounded p-4 qpc-hafs" dir="rtl">
+          <% ayahs.each do |v| %>
+            <%= v.text_qpc_hafs %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="mt-4 bg-white border border-gray-200 rounded p-5">
+      <div class="text-sm text-gray-900"><%= safe_html theme.theme %></div>
+      <% if theme.keywords.present? %>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <% theme.keywords.each do |k| %>
+            <span class="bg-blue-50 border border-blue-200 text-blue-800 text-xs px-3 py-1 rounded-full"><%= k %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-sm text-gray-600">No theme available for this ayah.</div>
+  <% end %>
+<% end %>
+
+

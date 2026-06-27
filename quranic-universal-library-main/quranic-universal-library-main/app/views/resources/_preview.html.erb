@@ -1,0 +1,40 @@
+<section class="mb-4">
+  <% resource_type =  resource.resource_type.gsub('-', '_')%>
+  <%= render "resources/previews/#{resource_type}", resource: resource %>
+</section>
+
+<script>
+  function jumpTo(key, val){
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set(key, val);
+    Turbo.visit(currentUrl.toString());
+  }
+
+  function jumpToAyah(value) {
+    jumpTo('ayah', value);
+  }
+
+  function jumpToSurah(value) {
+    jumpTo('surah', value);
+  }
+
+  function jumpToPage(value) {
+    jumpTo('page', value);
+  }
+
+  function jumpToJuz(value) {
+    jumpTo('juz', value);
+  }
+  function jumpToRuku(value) {
+    jumpTo('ruku', value);
+  }
+  function jumpToHizb(value) {
+    jumpTo('hizb', value);
+  }
+  function jumpToManzil(value) {
+    jumpTo('manzil', value);
+  }
+  function jumpToRub(value) {
+    jumpTo('rub', value);
+  }
+</script>

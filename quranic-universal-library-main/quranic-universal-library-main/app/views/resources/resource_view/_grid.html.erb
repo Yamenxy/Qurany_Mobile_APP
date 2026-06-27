@@ -1,0 +1,36 @@
+<%
+  patterns = (1..10).to_a
+
+  resources = local_assigns[:resources] || @resources
+  search_context = local_assigns[:search_context] || @resource_search
+%>
+
+<div class="col-span-12 lg:col-start-2 lg:col-span-12 mt-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4" >
+    <% resources.each do |card| %>
+      <%
+        is_quran_script = local_assigns[:is_quran_script] || card.try(:quran_script?) || card.try(:font?)
+        search_term = "#{card.name.downcase} #{card.info.to_s.downcase} #{card.humanize_cardinality_type.to_s.downcase} #{card.tag_names.join(' ').downcase}"
+      %>
+
+      <%= render 'card/card-container', card: card, patterns: patterns, data: { turbo_frame: '_top', search: search_term } do %>
+        <%= render 'card/card_content',
+                   card: card,
+                   title: link_to(card.name, resource_search_detail_path(card, search_context), class: 'hover:text-[#46ac7a] transition-colors', data: { turbo_frame: '_top' }),
+                   show_info: false,
+                   is_quran_script: is_quran_script,
+                   show_download: true,
+                   show_tags: false
+        %>
+
+        <% if card.get_tags.present? %>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <% card.get_tags.each do |tag| %>
+              <%= render partial: 'resources/tag', locals: { tag: tag } %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>

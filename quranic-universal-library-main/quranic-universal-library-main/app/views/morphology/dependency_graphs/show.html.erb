@@ -1,0 +1,15 @@
+<%= render 'tools/header',
+           name: 'Ayah Dependency Graphs',
+           key: 'ayah_dependency_graph',
+           wide_container: true,
+           actions: [
+             link_to('Back', morphology_dependency_graphs_path, class: 'inline-flex items-center justify-center px-3 py-1.5 rounded text-sm font-medium bg-sky-600 text-white hover:bg-sky-700')
+           ]
+%>
+
+<div class="page-wrapper container px-4">
+  <div class="page-section">
+    <%= render partial: 'graph', locals: { collection: @collection } %>
+  </div>
+</div>
+

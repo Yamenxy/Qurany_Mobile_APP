@@ -1,0 +1,77 @@
+<div id="title">
+  Audio Timestamping tools
+</div>
+
+<div id="body">
+  <div class="modal-body">
+    <section class="bg-white px-6">
+      <div class="max-w-4xl mx-auto">
+        <p class="text-gray-700 leading-relaxed mb-8">
+          Audio timestamping is the process of mapping each word, or ayah in a Quranic recitation to its exact time within the audio.
+          This data enables features such as real-time highlighting, synchronized playback, and precise navigation within the a full surah recitation.
+
+          QUL provides a suite of timestamping tools designed to analyze, refine, and generate precise timing data for Quranic audio files, ensuring accurate synchronization between the recitation and the Quranic text.        </p>
+
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Available Tools</h3>
+
+        <ul class="space-y-4">
+          <li>
+            <a href="/segments" class="block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 hover:shadow-sm transition">
+              <h4 class="font-semibold text-gray-800 flex items-center gap-2">
+                Audio Segmentations
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </h4>
+              <p class="text-gray-600 text-sm mt-1">
+                Used to inspect and validate raw segmentation data of recitations by viewing detailed statistics, testing real-time word highlighting, and identifying missing or misaligned words.
+              </p>
+            </a>
+          </li>
+
+          <li>
+            <a href="/ayah-boundaries" class="block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 hover:shadow-sm transition">
+              <h4 class="font-semibold text-gray-800 flex items-center gap-2">
+                Ayah Boundary Visualizer
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </h4>
+              <p class="text-gray-600 text-sm mt-1">
+                Visualizes ayah start and end times as timeline bars, helping to debug and refine ayah boundary data derived from raw segmentation.
+              </p>
+            </a>
+          </li>
+
+          <li>
+            <a href="/ayah_audio_files" class="block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 hover:shadow-sm transition">
+              <h4 class="font-semibold text-gray-800 flex items-center gap-2">
+                Ayah Audio Segments
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </h4>
+              <p class="text-gray-600 text-sm mt-1">
+                Tool for manually fixing word-by-word segments of ayah-by-ayah audio files.
+              </p>
+            </a>
+          </li>
+
+          <li>
+            <a href="/surah_audio_files" class="block bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-gray-100 hover:shadow-sm transition">
+              <h4 class="font-semibold text-gray-800 flex items-center gap-2">
+                Surah Audio Segments
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </h4>
+              <p class="text-gray-600 text-sm mt-1">
+                Tool for fixing word-by-word timestamp data for full surah audio files.
+              </p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>

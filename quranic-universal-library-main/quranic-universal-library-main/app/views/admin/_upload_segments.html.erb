@@ -1,0 +1,40 @@
+<div id="title" class="text-xl font-semibold text-gray-800">
+  Upload segments for <%= resource.name %>
+</div>
+
+<%
+  url = if resource.one_ayah?
+          upload_segments_cms_recitation_path(resource)
+        else
+          upload_segments_cms_audio_recitation_path(resource)
+        end
+%>
+
+<div id="body">
+  <%= form_with url: url, method: :put do |form| %>
+    <div class="p-6">
+      <% if resource.segment_locked? %>
+        <div class="px-4 py-3 rounded mb-4 bg-blue-100 border border-blue-400 text-blue-700">
+          Segments are locked for this recitation. Please unlock the segments and try again.
+        </div>
+      <% else %>
+        <div class="mb-4 my-2">
+          <%= form.label :remove_existing, class: "flex items-center gap-2 cursor-pointer" do %>
+            <%= form.check_box :remove_existing, class: "w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+            <span class="text-gray-700">Remove existing segments?</span>
+          <% end %>
+        </div>
+        <div class="mb-4 my-2">
+          <%= form.label :file, 'Select timing db file', class: 'block text-gray-700 font-medium mb-2' %>
+          <%= form.file_field :file, class: 'w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent' %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if !resource.segment_locked? %>
+      <div class="flex items-center justify-end p-6 border-t border-gray-200 space-x-2">
+        <%= form.submit 'Upload', class: 'bg-green-600 text-white px-6 py-2 rounded font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer' %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

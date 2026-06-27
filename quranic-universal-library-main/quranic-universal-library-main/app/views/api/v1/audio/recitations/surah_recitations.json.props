@@ -1,0 +1,5 @@
+recitations = @presenter.surah_recitations
+
+json.recitations do
+  json.array! recitations, partial: 'surah_recitation'
+end

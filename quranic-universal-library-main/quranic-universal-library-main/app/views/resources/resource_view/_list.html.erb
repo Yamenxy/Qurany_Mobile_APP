@@ -1,0 +1,76 @@
+<%
+  resources = local_assigns[:resources] || @resources
+  search_context = local_assigns[:search_context] || @resource_search
+  show_sort = !search_context&.active?
+%>
+
+<div class="mt-4">
+  <% if show_sort %>
+    <div class="flex items-center justify-between border-b border-slate-200 px-1 pb-2 text-xs uppercase tracking-wide text-slate-500">
+      <span>
+        Sort:
+        <%= sort_order_link 'Name', :name, {}, data: { turbo_action: 'advance' } %>
+      </span>
+    </div>
+  <% end %>
+
+  <ul class="divide-y divide-slate-200">
+    <% resources.each do |card| %>
+      <% tags = card.get_tags %>
+      <% summary = card.short_summary.presence %>
+      <% detail_path = resource_search_detail_path(card, search_context) %>
+
+      <li id="<%= dom_id card %>"
+          class="group flex flex-col gap-4 px-2 py-5 transition-colors hover:bg-slate-50 sm:flex-row sm:items-start sm:gap-6 sm:px-3"
+          data-search="<%= "#{card.name.downcase} #{card.info.to_s.downcase} #{card.humanize_cardinality_type.to_s.downcase} #{card.tag_names.join(' ').downcase}" %>">
+
+        <div class="min-w-0 flex-1 space-y-3">
+          <h3 class="text-base sm:text-lg font-semibold leading-snug">
+            <%= link_to detail_path,
+                        class: 'inline-flex items-center gap-1.5 text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-[#476CFF] hover:decoration-[#476CFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#476CFF]/40 focus-visible:ring-offset-2 rounded-sm',
+                        data: { turbo_frame: '_top' } do %>
+              <span><%= card.name %></span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-[#476CFF]" aria-hidden="true">
+                <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd"/>
+              </svg>
+            <% end %>
+          </h3>
+
+          <% if card.humanize_cardinality_type.present? %>
+            <div>
+              <span class="ring-2 ring-green-600 text-green-600  px-4 py-1 rounded-full">
+                <%= card.humanize_cardinality_type %>
+              </span>
+            </div>
+          <% end %>
+
+          <% if summary.present? %>
+            <p class="text-sm text-slate-600 text-pretty"><%= summary %></p>
+          <% end %>
+
+          <% if card.related_resources.present? %>
+            <p class="text-xs text-slate-500">
+              View
+              <%= link_to pluralize(card.related_resources.size, 'related resource'),
+                          related_resources_path(card.resource_type, card.to_param),
+                          class: 'font-medium text-[#476CFF] underline underline-offset-2 hover:text-[#3657d8]',
+                          data: { turbo_frame: '_top', controller: 'ajax-modal', css_class: 'modal-lg', url: related_resources_path(card.resource_type, card.to_param) } %>
+            </p>
+          <% end %>
+
+          <% if tags.present? %>
+            <div class="flex flex-wrap gap-2">
+              <% tags.each do |tag| %>
+                <%= render partial: 'resources/tag', locals: { tag: tag } %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="sm:w-56 sm:flex-shrink-0 sm:pt-1">
+          <%= render 'card/download_dropdown', resource: card %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</div>

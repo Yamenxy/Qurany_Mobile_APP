@@ -1,0 +1,7 @@
+<%= turbo_stream.update "mushaf-page" do %>
+  <%= render 'page_preview' %>
+<% end %>
+
+<%= turbo_stream.replace 'flash-messages' do %>
+  <%= render 'shared/flash_notices' %>
+<% end %>

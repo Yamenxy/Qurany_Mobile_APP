@@ -1,0 +1,46 @@
+<div id=title>
+  <span class="h1 f-bold text-green-600">
+    Short keys
+  </span>
+</div>
+<%
+  short_keys = {
+    'Space': 'Play / Pause',
+    '← / →': 'Seek back / forward',
+    'z / x': 'Set ayah start / end',
+    'a / d': 'Previous / next ayah',
+    's / f / n': 'Slower / faster / normal speed',
+    'Ctrl/Cmd + Z': 'Undo',
+    'Ctrl/Cmd + Shift + Z': 'Redo'
+  }
+%>
+<div id=body>
+  <style>
+      kbd {
+          display: inline-block;
+          padding: 3px 5px;
+          font: 11px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+          line-height: 10px;
+          color: #444d56;
+          vertical-align: middle;
+          background-color: #fafbfc;
+          border: solid 1px #d1d5da;
+          border-radius: 6px;
+          box-shadow: inset 0 -1px 0 #d1d5da;
+      }
+  </style>
+  <div class="p-6 space-y-3 text-sm">
+    <p class="text-gray-600">Keyboard shortcuts for the segment builder. For a full walkthrough of the tool, open the <strong>Help</strong> button.</p>
+
+    <table class="w-full">
+      <tbody>
+      <% short_keys.each do |key, fun| %>
+        <tr>
+          <td class="py-0.5 pr-3 whitespace-nowrap"><kbd><%= key %></kbd></td>
+          <td class="py-0.5"><%= fun %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

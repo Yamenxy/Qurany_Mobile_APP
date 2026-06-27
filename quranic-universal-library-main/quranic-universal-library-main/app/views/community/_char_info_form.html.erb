@@ -1,0 +1,221 @@
+<%
+  if (params[:text].present?)
+    text = params[:text].to_s
+    chars = text.to_s.chars
+  elsif params[:scripts].present?
+    chars = []
+    text = ''
+    params[:scripts].split(',').each do |script|
+      if scripts.keys.include?(script.to_sym)
+        ayahs = Verse.order('id ASC').pluck(script)
+        text ||= ayahs[0]
+        params[:script] ||= script
+        chars += ayahs.join(' ').chars
+      end
+    end
+
+  elsif params[:script].present? && scripts.keys.include?(params[:script].strip.to_sym)
+    ayahs = Verse.order('id ASC').pluck(params[:script].strip)
+    text = ayahs[0]
+    chars = ayahs.join(' ').chars
+  else
+    chars = []
+  end
+
+  uniq_chars = chars.uniq.sort.compact_blank
+  char_set = uniq_chars.sort.join(' ').strip
+%>
+
+<%= render 'tools/header',
+           name: "Text and Font Compatibility Checker",
+           key: 'char'
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4" data-controller="chars-info">
+  <div class="page-section">
+    <div class="flex flex-wrap gap-4">
+      <div class="w-full">
+        <%= form_with url: chars_info_path, method: "get" do |form| %>
+          <div class="mb-4">
+            <%= form.label :text, 'Enter the text', class: 'font-medium mb-2 block' %>
+            <%= form.text_area :text, 
+                value: params[:text], 
+                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text",
+                data: { chars_info_target: "input" },
+                placeholder: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" %>
+            <div class="text-sm text-gray-600 mt-2">
+              Enter the text to analyze its Unicode characters or preview it across all available fonts
+            </div>
+            <% if params[:name].present? %>
+              <div class="help-block">
+                <%= params[:name] %>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="mb-4">
+            <%= form.label :script, 'Select script' %>
+            <%
+              scripts_options = scripts.map do |key, name|
+                [name, key]
+              end
+            %>
+            <%= form.select :script, options_for_select(scripts_options, params[:script]), { include_blank: 'Select ' }, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+
+          <div class="mb-4 flex gap-3 mt-2 flex-wrap">
+            <%= form.submit "Analyze Unicode", class: "btn btn-success btn-sm" %>
+            <button 
+              type="button"
+              data-action="click->chars-info#showPreview"
+              class="btn btn-info btn-sm"
+            >
+              Preview in All Fonts
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render 'char_font_options' %>
+
+    <div data-chars-info-target="output" class="hidden mb-8">
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            Font Compatibility Preview
+          </h3>
+          <button 
+            data-action="click->chars-info#hidePreview"
+            class="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-white transition"
+            title="Close preview"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p class="text-gray-600 mb-6">
+          Viewing your text across <%= all_quran_fonts.size %> available Quranic fonts. Check compatibility and rendering quality for each font.
+        </p>
+        
+        <div class="space-y-3">
+          <% all_quran_fonts.each do |font_name, font_class| %>
+            <div class="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between mb-3">
+                <div class="text-sm font-semibold text-gray-700 px-3 py-1 bg-gray-100 rounded-full">
+                  <%= font_name %>
+                </div>
+              </div>
+
+              <div class="<%= font_class %> text-3xl leading-relaxed py-2 px-2 bg-gray-50 rounded preview-text"
+                   data-chars-info-target="preview"
+                   data-font-class="<%= font_class %>"
+                   dir="rtl">
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <% if uniq_chars.present? %>
+        <div class="char">
+          <%= text %>
+        </div>
+
+        <div>
+          Total Chars: <%= chars.length %> <br/>
+          Uniq Chars: <%= uniq_chars.length %>
+        </div>
+
+        <div data-text="<%= char_set -%>"
+             title="Copy <%= char_set %>"
+             data-controller="tooltip copy-to-clipboard"
+             class="char"
+        >
+          <%= char_set %>
+        </div>
+      <% end %>
+
+      <div class="tools-table-overflow">   
+      <table class="w-full hover:bg-gray-50">
+        <thead class="sticky top-0 z-10 bg-white border-b border-gray-300">
+        <tr class="sticky">
+          <th>#</th>
+          <th style="width: 100px">Name</th>
+          <th>Char</th>
+          <th>Count</th>
+          <th>Decimal</th>
+          <th class="truncate whitespace-nowrap">HTML entity</th>
+          <th>Decomposition</th>
+          <th>Hex</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% uniq_chars.each_with_index do |char, i| %>
+          <tr>
+            <%
+              hex = char.ord.to_s(16).rjust(4, '0')
+              decimal = char.ord
+              decomposition = char.unicode_normalize(:nfd)
+            %>
+            <td><%= i + 1 %></td>
+            <td>
+              <% if params[:script].present? %>
+                <%= link_to Unicode::Name.of(char) || 'UNDEF', chars_info_path(char: char, script: params[:script]), target: '_blank' %>
+              <% else %>
+                <%= Unicode::Name.of(char) %>
+              <% end %>
+            </td>
+            <td class="char">
+              <div class="flex text-center lg:justify-around">
+                <div class="char">
+                  <%= char %>
+                </div>
+
+                <div>
+                  <button class="btn btn-info"
+                          data-text="<%= char -%>"
+                          data-title="Copy <%= char %>"
+                          data-controller="tooltip copy-to-clipboard"
+                  >
+                    copy
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <td><%= chars.count char %></td>
+            <td><%= decimal %></td>
+            <td><%= "&##{decimal};" %></td>
+            <td>
+              <% if decomposition.size > 1 %>
+                <span class="char">
+                (<%= decomposition.chars.join(" - ") %>)
+                </span>
+
+                <span class="ml-2"
+                      data-text="<%= decomposition -%>"
+                      title="Copy <%= decomposition %>"
+                      data-controller="tooltip copy-to-clipboard"
+                      class="char"
+                >
+                  Copy <%= decomposition %>
+                </span>
+              <% end %>
+            </td>
+            <td><%= link_to hex, "https://www.compart.com/en/unicode/U+#{hex}", target: '_blank' %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<%
+  resource = @user_project.resource_content
+%>
+
+<%= render 'layouts/qul_head' if !request.xhr? %>
+
+<div id=title>
+  Request permission for <%= resource.name %>
+</div>
+
+<div id=body>
+  <%= form_with model: @user_project, url: user_projects_path, data: { controller: 'remote-form', auto_close: true } do |form| %>
+    <div class="p-6">
+      <%= render 'shared/form_errors', object: @user_project %>
+
+      <div class="flex flex-wrap gap-4">
+        <div class="w-full">
+          <%= form.hidden_field :resource_content_id, value: resource.id %>
+
+          <div class="mb-4 mb-3">
+            <%= form.label :reason_for_request, 'Reason for Request', class: 'h5' %>
+            <%= form.text_area :reason_for_request, required: true, cols: nil, rows: nil, class: 'form-control' %>
+            <div class="text-gray-600">
+              Please provide a brief explanation of why you are requesting access to this resource. Additionally, share
+              some details about your background, expertise, and any relevant experience that supports your request.
+            </div>
+          </div>
+
+          <% if resource.recitation? %>
+            <%= form.hidden_field :language_proficiency, value: 'N/A' %>
+          <% else %>
+            <div class="mb-4 mb-3">
+              <%= form.label :language_proficiency, 'Language Proficiency', class: 'h5' %>
+              <%= form.text_area :language_proficiency, required: true, cols: nil, rows: nil, class: 'form-control' %>
+              <div class="text-gray-600">
+                Please describe your proficiency in language
+                <% if resource.language %>(e.g., <%= resource.language&.name %>)
+                <% end %> of this resource.
+              </div>
+            </div>
+          <% end %>
+
+          <div class="mb-4 mb-3">
+            <%= form.label :motivation_and_goals, 'Motivation and Goals', class: 'h5' %>
+            <%= form.text_area :motivation_and_goals, required: true, cols: nil, rows: nil, class: 'form-control' %>
+            <div class="text-gray-600">
+              What motivates you to contribute to the <%= resource.name %> in QUL? Please explain your reasons and
+              contribution goals.
+            </div>
+          </div>
+
+          <% if resource.translation? || resource.tafsir? || resource.chapter_info? %>
+            <div class="mb-4 mb-3">
+              <div class="custom-control custom-checkbox">
+                <%= form.check_box :review_process_acknowledgment, class: 'custom-control-input' %>
+                <%= form.label :review_process_acknowledgment, 'Review Process Acknowledgment', class: 'custom-control-label' %>
+              </div>
+              <div class="text-gray-600">
+                I acknowledge that I will only suggest fixes for typos, spelling mistakes, and factual issues. I will
+                not
+                use this permission to suggest changes in wording preferences or subjective opinions.
+              </div>
+
+              <div class="px-4 py-3 rounded mb-4 bg-gray-800 border border-gray-900 text-white mt-2">
+                We ask for this acknowledgment to ensure that the integrity of the
+                <% if resource.translation? %>
+                  translation
+                <% elsif resource.tafsir? %>
+                  tafsir
+                <% elsif resource.chapter_info? %>
+                  resource
+                <% end %>
+                is maintained. Our goal is
+                to address objective errors, such as typos and factual inaccuracies, rather than personal preferences or
+                subjective opinions. By agreeing, you help us stay true to the original text as intended by the authors.
+              </div>
+            </div>
+          <% else %>
+            <%= form.hidden_field :review_process_acknowledgment, value: '1' %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end p-6 border-t border-gray-200 space-x-2">
+      <button type="button" class="px-4 py-2 rounded font-medium transition-colors bg-gray-200 hover:bg-gray-300 text-gray-800" data-action="click->ajax-modal#hide">Close</button>
+
+      <div class="mb-4 mt-2" style="text-align: right">
+        <%= form.submit 'Submit', class: 'btn btn-success btn-sm' %>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,79 @@
+<%
+  actions = []
+  previous_ayah = @verse.previous_ayah
+  next_ayah = @verse.next_ayah
+
+  if previous_ayah
+    actions << link_to('Previous ayah', word_concordance_label_path(previous_ayah.id), class: 'btn btn-dark')
+  end
+  if next_ayah
+    actions << link_to('Next ayah', word_concordance_label_path(next_ayah.id), class: 'btn btn-dark')
+  end
+
+%>
+
+<%= render 'tools/header',
+           name: "Quran corpus tool",
+           title: "Corpus tagging for #{@verse.chapter.name_simple} ayah #{@verse.verse_number}",
+           key: 'corpus',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Filter', path: word_concordance_labels_path }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section">
+    <div class="px-4 py-3 rounded mb-4 bg-[#d3d3d4] border text-black" role="alert">
+      <div class="qpc-hafs" id="ayah_text" style="font-size: 30px; margin-top: 10px"><%= @verse.text_qpc_hafs %> </div>
+    </div>
+
+    <h2>Words list</h2>
+    <table class="w-full hover:bg-gray-50">
+      <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+      <tr>
+        <td>ID</td>
+        <td style="direction: rtl">Text</td>
+        <td style="direction: rtl">Location</td>
+        <td style="direction: rtl">Segments</td>
+        <td>Actions</td>
+      </tr>
+      </thead>
+
+      <tbody>
+      <% @verse.morphology_words.includes(:word_segments, :word).order('words.position, morphology_word_segments.position').each do |word| %>
+        <tr class="hover:bg-gray-200 border-b">
+          <td class="py-2 pl-2">
+            <%= link_to(word.id, [:cms, word], target: '_blank') %>
+          </td>
+
+          <td class="py-2 qpc-hafs">
+            <%= word.text %>
+          </td>
+
+          <td class="py-2">
+            <%= word.location %>
+          </td>
+
+          <td class="py-2" style="direction: rtl;">
+            <% word.word_segments.each do |segment| %>
+             <span>
+              <%= link_to(segment.text_uthmani, segment_detail_word_concordance_label_path(@verse.id, word: word.location, segment: segment.position), class: "me_quran px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 text-white rounded transition-colors") %>
+             </span>
+            <% end %>
+          </td>
+
+          <td class="py-2">
+            <%= link_to('Show', word_detail_word_concordance_label_path(@verse.id, word: word.location), class: 'btn btn-success') %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-end gap-2 mt-3">
+    <%= link_to('Previous ayah', word_concordance_label_path(@verse.id - 1), class: 'btn btn-dark') if previous_ayah %>
+    <%= link_to('Next ayah', word_concordance_label_path(@verse.id + 1), class: 'btn btn-dark') if next_ayah %>
+  </div>
+</div>
+
+

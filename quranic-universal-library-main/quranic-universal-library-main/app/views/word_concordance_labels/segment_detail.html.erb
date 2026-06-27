@@ -1,0 +1,91 @@
+<%
+  actions = []
+  actions << link_to('Previous Segment', segment_detail_word_concordance_label_path(@verse.id, word: @word.location, segment: @segment.position - 1), class: 'btn btn-dark')
+  actions << link_to('Next Segment', segment_detail_word_concordance_label_path(@verse.id, word: @word.location, segment: @segment.position + 1), class: 'btn btn-dark')
+%>
+
+<%= render 'tools/header',
+           name: "Quran corpus tool",
+           title: "Segment #{@word.location}:#{@segment.position}",
+           key: 'corpus',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Word', path: word_detail_word_concordance_label_path(@verse.id, word: @word.location) }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section">
+    <div class="flex justify-between">
+      <div>
+        <b style="margin-right: 20px">Text: </b>
+        <span class="qpc-hafs" id="ayah_text"><%= @segment.text_uthmani %> </span>
+      </div>
+
+      <div>
+        <b style="margin-right: 20px">Root: </b>
+        <span class="qpc-hafs" id="ayah_text">
+            <%= @segment.root_name %>
+         </span>
+      </div>
+
+      <div>
+        <b style="margin-right: 20px">Lemma: </b>
+        <span class="qpc-hafs" id="ayah_text">
+          <%= @segment.lemma_name %>
+         </span>
+      </div>
+
+      <div>
+        <b style="margin-right: 20px">Stem: </b>
+      </div>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Part of speech: </b>
+      <span>
+        <%= @segment.part_of_speech_key %>  - <%= @segment.part_of_speech_name %>
+      </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">POS tags </b>
+      <span><%= @segment.pos_tags %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Verb form </b>
+      <span><%= @segment.verb_form %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Topic: </b>
+      <span><%= @segment.topic&.name %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Grammar concept: </b>
+      <span><%= %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Grammar role: </b>
+      <span><%= %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Grammar subrole: </b>
+      <span><%= %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Grammar Desc Arabic: </b>
+      <span><%= @segment.grammar_term_desc_arabic %> </span>
+    </div>
+
+    <div>
+      <b style="margin-right: 20px">Grammar Desc English: </b>
+      <span>
+        <%= safe_html @segment.grammar_term_desc_english.to_s %>
+      </span>
+    </div>
+  </div>
+</div>

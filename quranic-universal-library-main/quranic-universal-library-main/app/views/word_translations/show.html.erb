@@ -1,0 +1,65 @@
+<%
+  actions = []
+  next_ayah = @verse.next_ayah
+  previous_ayah = @verse.previous_ayah
+
+  if @access
+    actions << link_to('Edit', new_word_translation_path(ayah: @verse.id, language: params[:language]), class: 'btn btn-success')
+  end
+
+  if previous_ayah
+    actions << link_to('Previous ayah', word_translation_path(previous_ayah.id, language: params[:language]), class: 'btn btn-dark')
+  end
+
+  if next_ayah
+    actions << link_to('Next ayah', word_translation_path(next_ayah.id, language: params[:language]), class: 'btn btn-dark')
+  end
+
+%>
+
+<%= render 'tools/header',
+           name: "Word translation proofreading",
+           title: "#{@language.name} word-by-word translation for #{@verse.chapter.name_simple} ayah #{@verse.verse_number}",
+           key: 'word_translation',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Filter', path: word_translations_path(language: params[:language]) }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section mb-4">
+    <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4" role="alert">
+      <div>
+        <b>Text Uthmani:</b>
+        <div class="qpc-hafs"> <%= @verse.text_qpc_hafs %></div>
+      </div>
+
+      <% @verse.translations.each do |trans| %>
+        <div>
+          <b><%= trans.resource_name %>:</b> <br/>
+
+          <div class="<%= trans.language_name %>">
+            <%= safe_html trans.text %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="text-xl mb-4">
+      <%
+        progress = @verse.word_translation_progress(@language.id)
+      %>
+
+      Translation progress
+      <div class="w-full bg-gray-200 rounded-full h-6 mt-2">
+        <div class="bg-green-500 h-6 rounded-full text-white text-xs flex items-center justify-center transition-all duration-300" role="progressbar" aria-valuenow="<%= progress %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 1em;width: <%= progress%>%;">
+          <%= progress %>%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <h2>Word list with translation</h2>
+    <%= render 'table' %>
+  </div>
+</div>

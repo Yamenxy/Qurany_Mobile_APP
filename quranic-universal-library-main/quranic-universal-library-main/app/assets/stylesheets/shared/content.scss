@@ -1,0 +1,122 @@
+body {
+  --rem: 16;
+}
+
+.uthmani {
+  font-family: UthmanicHafs1-Ver17;
+}
+
+.arabic {
+  direction: rtl;
+}
+
+.english{
+  direction: ltr;
+}
+
+.saw {
+  color: #FF00CC;
+}
+
+.tafsir {
+  font-size: 20px;
+
+  .heading {
+    font-size: larger;
+  }
+
+  .translation, .arabic {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  .blue {
+    color: #006d98;
+  }
+
+  .red, .translation {
+    color: #950000;
+  }
+
+  //.text-translation{
+  //  color: #CC0000;
+  //}
+
+  .green, root {
+    color: #008000;
+  }
+
+  .brown {
+    color: #707070;
+  }
+
+  .reference {
+    color: #FF0066;
+    font-size: small;
+  }
+
+  .gray {
+    color: #999;
+  }
+
+  .arabic, .quot {
+    color: #57D798;
+  }
+
+  h3 {
+    margin: 10px 0;
+    font-size: larger;
+  }
+
+  .page-number {
+    text-align: left;
+    font-size: small;
+    margin: 20px 0px;
+  }
+
+  .poetry{
+    color: #e76c47;
+    margin: 12px 0;
+    text-align: center;
+  }
+
+  .hlt{
+    color: #57D798;
+  }
+
+  .sep {
+    color: #e3120a;
+    text-align: center;
+    margin: 12px 0;
+  }
+}
+
+.suggestion-popup {
+  position: fixed;
+  right: 41px;
+  bottom: 92px;
+  transform: translate(41px, 92px);
+}
+
+.mushaf {
+  .mushtabiat {
+    border: 0.9px dotted lightgray;
+  }
+}
+
+.border-highlighted{
+    border: 1px solid #FF0000 !important;
+}
+
+[data-location]{
+  display: inline-block;
+  cursor: pointer;
+}
+
+.h{
+  color: #57D798;
+}
+
+.b{
+  font-weight: bold;
+}

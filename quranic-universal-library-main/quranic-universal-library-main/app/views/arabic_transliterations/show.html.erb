@@ -1,0 +1,111 @@
+<%
+  actions = []
+  prev_ayah = @verse.previous_ayah
+  next_ayah = @verse.next_ayah
+
+  img_host = "https://static-cdn.tarteel.ai/qul/images/page/transliteration"
+  page_number = @predicted_page
+
+  if @access
+    actions << link_to('Contribute', new_arabic_transliteration_path(ayah: @verse.id), class: 'btn btn-success')
+  end
+
+  if (prev_ayah)
+    actions << link_to('Previous ayah', arabic_transliteration_path(prev_ayah.id), class: 'btn btn-dark')
+  end
+
+  if (next_ayah)
+    actions << link_to('Next ayah', arabic_transliteration_path(next_ayah.id), class: 'btn btn-dark')
+  end
+
+%>
+
+<%= render 'tools/header',
+           name: "Arabic/Urdu Transliterations",
+           title: "Arabic/Urdu Transliterations - #{@verse.verse_key}",
+           key: 'arabic_transliteration',
+           actions: actions,
+           breadcrumb_parents: [{ label: 'Filter', path: arabic_transliterations_path }]
+%>
+
+<div class="page-wrapper container max-w-7xl mx-auto px-4">
+  <div class="page-section zoomable">
+    <div class="px-4 py-3 rounded mb-4 bg-blue-100 border border-blue-400 text-blue-700" role="alert">
+      <div class="indopak-nastaleeq quran-text mb-2">
+        <%= @verse.text_indopak_nastaleeq %>
+      </div>
+
+      <div class="indopak-nastaleeq quran-text mb-2 text-transliteration">
+        <%= render 'ayah_preview' %>
+      </div>
+    </div>
+
+    <div id="editor-wrap"
+         data-host="<%= img_host %>"
+         data-page="<%= @predicted_page %>"
+         data-controller="zoom-image">
+      <div class="mb-4">
+        <%= select_tag :change_page, options_for_select(1..980, @predicted_page), id: 'jump-to-page', class: 'form-control', data: { placeholder: 'Jump to page', controller: 'select2' } %>
+        <div class="help-block">Jump to page number</div>
+      </div>
+
+      <div class="text-center"
+           data-controller="zoom-image"
+           data-page="<%= page_number %>"
+           data-host="<%= img_host %>"
+      >
+        <input type="range" class="form-range" min="1" max="3" step="0.1" id="zoom-slider" value="1"/>
+        <div class="flex justify-between">
+          <button class="btn btn-primary" id="previous-page">Previous Page</button>
+          <button class="btn btn-primary" id="next-page">Next page</button>
+        </div>
+
+        <div id="image-container" class="mt-4 p-4" style="height: 400px">
+          <img id="zoom-image" data-controller="lazy-load" width="100%" data-src="<%= img_host %>/<%= page_number %>.jpg" } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section">
+    <div class="text-xl mb-4">
+      Transliteration progress
+      <div class="w-full bg-gray-200 rounded-full h-6">
+        <div class="h-6 rounded-full text-white text-xs flex items-center justify-center transition-all duration-300 bg-green-500 progress-bar-striped active" role="progressbar" aria-valuenow="<%= @verse.arabic_transliteration_progress %>" aria-valuemin="0" aria-valuemax="100" style="min-width: 1em;width: <%= @verse.arabic_transliteration_progress %>%;">
+          <%= @verse.arabic_transliteration_progress %>%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-section mt-4">
+    <h2>Words</h2>
+    <table class="w-full hover:bg-gray-50">
+      <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+      <tr>
+        <td>Word id</td>
+        <td>IndoPak</td>
+        <td>Translitetation</td>
+        <td>Continous?</td>
+      </tr>
+      </thead>
+
+      <tbody>
+      <% @verse.words.order('position asc').each do |word| %>
+        <tr class="hover:bg-gray-200 border-b">
+          <th scope="row" class="py-2 pl-2"><%= word.position %></th>
+
+          <td class="py-2 quran-text indopak-nastaleeq"><%= word.arabic_transliteration&.indopak_text %></td>
+          <td class="py-2 quran-text indopak-nastaleeq">
+            <%= word.arabic_transliteration&.text %>
+          </td>
+
+          <td class="py-2 arabic">
+            <%= word.arabic_transliteration&.continuous? %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

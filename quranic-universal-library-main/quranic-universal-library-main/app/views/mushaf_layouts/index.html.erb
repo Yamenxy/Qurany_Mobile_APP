@@ -1,0 +1,47 @@
+<%= render 'tools/header',
+           name: 'Mushaf layouts',
+           key: 'mushaf_layouts',
+           help: 'mushaf_layout'
+%>
+
+<%= turbo_frame_tag 'resources' do %>
+  <div class="page-wrapper container max-w-7xl mx-auto px-4">
+    <div class="page-section">
+      <h2 class="text-2xl mb-4">Mushaf list</h2>
+      <div class="tools-table-overflow">
+        <table class="w-full text-left hover:bg-gray-50">
+          <thead class="sticky top-0 z-10 bg-white border-b-2 border-black">
+          <tr>
+            <th>
+              <%= sort_order_link 'Id', :id %>
+            </th>
+            <th>Name</th>
+            <th>Pages</th>
+            <th class="md:hidden">Lines</th>
+            <th class="hidden md:table-cell">Lines per page</th>
+            <th>Qirat</th>
+            <th class="text-right">Actions</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <% @mushafs.each do |m| %>
+            <tr class="hover:bg-gray-200 border-b">
+              <td class="py-2 pl-2">
+                <%= link_to m.id, mushaf_layout_path(m.id), data: {turbo_frame: '_top'} %>
+              </td>
+              <td class="py-2"><%= m.name %></td>
+              <td class="py-2"><%= m.pages_count %></td>
+              <td class="py-2"><%= m.lines_per_page %></td>
+              <td class="py-2"><%= m.qirat_type&.name %></td>
+              <td class="py-2 text-right">
+                <%= link_to 'Show', mushaf_layout_path(m.id), class: 'btn btn-success', data: {turbo_frame: '_top'} %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% end %>

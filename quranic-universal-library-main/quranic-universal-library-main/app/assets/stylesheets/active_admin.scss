@@ -1,0 +1,82 @@
+@import "active_admin/mixins";
+@import "active_admin/base";
+@import "select2/dist/css/select2";
+
+@import "shared/font_faces";
+@import "shared/tajweed";
+@import "shared/tajweed_color_new";
+@import "shared/mushaf_page";
+@import "shared/corpus";
+@import "shared/diffy";
+@import "shared/content";
+@import "admin/theme";
+@import "admin/dict";
+@import "admin/bootstrap";
+@import "admin/modal";
+@import "admin/active_admin_bootstrab_overrides";
+@import "libs/toastr";
+@import "components/common";
+@import "components/syntax_graph";
+
+.searchable_select, .select2-container {
+  .select2-selection__clear {
+    padding-right: 10px;
+    background-image: none !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    color: #000 !important;
+  }
+}
+
+.select2-container{
+ min-width: 100px;
+}
+
+.collapable {
+  &.collapsed span {
+    &:before {
+      content: '☝';
+    }
+  }
+
+  span {
+    &:before {
+      content: '☟';
+    }
+  }
+}
+
+input[type=search] {
+  width: calc(80% - 22px);
+  border: 1px solid #c9d0d6;
+  border-radius: 3px;
+  font-size: .95em;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  outline: none;
+  padding: 8px 10px 7px;
+}
+
+.download-form {
+  li {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-right: .5rem;
+      width: 100% !important;
+    }
+  }
+}
+
+.toggle-password {
+  position: absolute;
+  cursor: pointer;
+  top: 18px;
+  right: 50px;
+}
+
+.col-v4_image{
+  img{
+    height: 80px;
+  }
+}

@@ -1,0 +1,434 @@
+class ExportedWord < ApplicationRecord
+end
+
+class ExportedLayout < ApplicationRecord
+  self.inheritance_column = nil
+
+  validates :page, presence: true, uniqueness: { scope: [:range_start, :line] }
+end
+
+class ExportMushafLayout
+  MUSHAF_IDS = [
+    1, # PQC v2 1421H
+    2, # QPC v1 1405H
+    6, # Indopak 15 lines(Qudratullah)
+    7, # Indopak 16 lines(Taj company)
+    8, # Indopak 14 lines(Pak company)
+    17, # Indopak 13 lines(Qudratullah)
+    18, # Indopak 17 lines(Taj company)
+    19, # QPC V4 1441H
+    20, # Digital Khatt v2
+    22, # Digital Khatt v1
+    23, # Indopak 13 lines(Taj)
+    29 # Indopak 9 lines(Gaba)
+  ]
+
+  attr_accessor :mushafs,
+                :stats,
+                :postfix_names
+
+  def initialize
+    @mushafs = []
+    @stats = {}
+    @postfix_names = false
+  end
+
+  def export(ids: MUSHAF_IDS, db_name: 'quran-data.sqlite', postfix_names: true)
+    @mushafs = Mushaf.where(id: ids).order('id ASC')
+    @postfix_names = postfix_names
+
+    prepare_db_and_tables(db_name)
+    export_words
+    export_layouts
+    add_db_indexes
+  end
+
+  def export_stats
+    stats
+  end
+
+  protected
+
+  def export_words
+    words = []
+    page_size = 1000
+    i = 0
+    stats[:words_count] = 0
+    stats[:issues] = []
+
+    Word.unscoped.order('word_index ASC').each do |word|
+      surah, ayah, word_number = word.location.split(':').map(&:to_i)
+      text_uthmani = get_word_text(word, 'text_uthmani')
+      text_indopak = get_word_text(word, 'text_qpc_nastaleeq_hafs')
+      indopak_hanafi = get_word_text(word, 'text_indopak_nastaleeq')
+      dk_indopak = get_word_text(word, 'text_digital_khatt_indopak')
+      code_v1 = get_word_text(word, 'code_v1')
+      text_digital_khatt_v2 = get_word_text(word, 'text_digital_khatt')
+      text_digital_khatt_v1 = get_word_text(word, 'text_digital_khatt_v1')
+      text_qpc_hafs = get_word_text(word, 'text_qpc_hafs')
+
+      is_ayah_marker = word.ayah_mark?
+
+      script_texts = [text_uthmani, text_indopak, indopak_hanafi, dk_indopak, code_v1, text_digital_khatt_v2, text_digital_khatt_v1, text_qpc_hafs]
+      if script_texts.detect(&:blank?)
+        stats[:issues].push("One of script text is blank for word: #{word.location}")
+      end
+
+      words.push([
+                   surah,
+                   ayah,
+                   word_number,
+                   word.word_index,
+                   text_uthmani,
+                   text_indopak,
+                   indopak_hanafi,
+                   dk_indopak,
+                   code_v1,
+                   text_digital_khatt_v2,
+                   text_digital_khatt_v1,
+                   text_qpc_hafs,
+                   is_ayah_marker
+                 ])
+      i += 1
+      stats[:words_count] += 1
+
+      if i >= page_size
+        bulk_insert_words(words)
+        words = []
+        i = 0
+      end
+    end
+
+    bulk_insert_words(words) if words.present?
+  end
+
+  def export_layouts
+    exported_tables = {}
+
+    mushafs.each do |mushaf|
+      table_name = get_mushaf_file_name(mushaf.id)
+      next if exported_tables[table_name]
+
+      exported_tables[table_name] = true
+      ExportedLayout.table_name = table_name
+      batch_size = 1000
+      layout_records = []
+      last_surah_number = nil
+
+      mushaf.mushaf_pages.order("page_number ASC").each do |page|
+        lines = {}
+        page_alignment = MushafLineAlignment.where(
+          mushaf_id: mushaf.id,
+          page_number: page.page_number,
+        ).order('line_number ASC')
+
+        page_alignment.each do |alignment|
+          lines[alignment.line_number.to_i] ||= []
+        end
+
+        page.words.includes(:word).order('position_in_page ASC').each do |w|
+          lines[w.line_number] ||= []
+          lines[w.line_number].push(w.word)
+        end
+
+        lines.keys.sort.each_with_index do |line, index|
+          alignment = MushafLineAlignment.where(
+            mushaf_id: mushaf.id,
+            page_number: page.page_number,
+            line_number: line
+          ).first
+
+          line_type = if alignment
+                        if alignment.is_surah_name?
+                          'surah_name'
+                        elsif alignment.is_bismillah?
+                          'basmallah'
+                        else
+                          'ayah'
+                        end
+                      else
+                        'ayah'
+                      end
+
+          range_start = range_end = nil
+          if line_type == 'ayah' && lines[line].present?
+            words = lines[line].sort_by { |word| word.word_index }
+
+            range_start = words.first.word_index
+            range_end = words.last.word_index
+          elsif line_type == 'surah_name'
+            range_start = alignment.get_surah_number
+            last_surah_number = range_start
+          elsif line_type == 'basmallah'
+            range_start = last_surah_number
+          end
+
+          is_centered = alignment&.is_center_aligned? || line_type == 'surah_name' || line_type == 'basmallah'
+
+          layout_records << [
+            page.page_number,
+            index + 1,
+            line_type,
+            is_centered,
+            range_start,
+            range_end
+          ]
+
+          if layout_records.size >= batch_size
+            bulk_insert_layouts(layout_records)
+            layout_records = []
+          end
+        end
+      end
+
+      bulk_insert_layouts(layout_records) unless layout_records.empty?
+      prepare_layout_stats(mushaf, table_name)
+    end
+  end
+
+  def bulk_insert_layouts(layout_records)
+    return if layout_records.blank?
+
+    conn = ExportedLayout.connection
+
+    values = layout_records.map do |record|
+      "(#{record[0]}, #{record[1]}, #{conn.quote(record[2])}, #{record[3] ? 'TRUE' : 'FALSE'}, #{record[4] ? record[4] : 'NULL'}, #{record[5] ? record[5] : 'NULL'})"
+    end.join(", ")
+
+    conn.execute <<-SQL
+  INSERT INTO #{ExportedLayout.table_name} (
+    page,
+    line,
+    type,
+    is_centered,
+    range_start,
+    range_end
+  ) VALUES
+    #{values}
+    SQL
+  end
+
+  def layout_name_ids
+    {
+      qpc_v2_layout: %w[1 4 5 10 11 12 20],
+      qpc_v1_layout: %w[2 22 21],
+      qpc_v4_layout: %w[19],
+
+      indopak_15_lines_layout: %w[6 3 13 14],
+      indopak_16_lines_layout: %w[7],
+      indopak_14_lines_layout: %w[8],
+
+      indopak_13_lines_layout: %w[17 23],
+      indopak_17_lines_layout: %w[18],
+      indopak_9_lines_layout: %w[29]
+    }
+  end
+
+  def layout_name_posfix
+    {
+      29 => '_gaba',
+      23 => '_taj',
+      18 => '_taj',
+      17 => '_qudratullah',
+      8 => '_pak',
+      6 => '_qudratullah',
+      7 => '_taj',
+      14 => '_madani'
+    }
+  end
+
+  def get_mushaf_file_name(mushaf_id)
+    name = layout_name_ids.find do |_layout, ids|
+      ids.include?(mushaf_id.to_s)
+    end
+    name = name&.first
+
+    if name.nil?
+      name = "mushaf_#{mushaf_id.to_s}_layout"
+    end
+
+    postfix = layout_name_posfix[mushaf_id]
+    if postfix_names && postfix
+      "#{name.to_s}#{postfix}"
+    else
+      name.to_s
+    end
+  end
+
+  def prepare_db_and_tables(db_name)
+    ExportedWord.establish_connection(
+      { adapter: 'sqlite3',
+        database: db_name
+      }
+    )
+    ExportedLayout.establish_connection(
+      { adapter: 'sqlite3',
+        database: db_name
+      }
+    )
+
+    ExportedWord.connection.execute <<~SQL
+        CREATE TABLE words (
+          surah_number     INTEGER,
+          ayah_number      INTEGER,
+          word_number      INTEGER,
+          word_number_all  INTEGER,
+
+          uthmani          STRING,
+          nastaleeq        STRING,
+          indopak          STRING,
+          dk_indopak       STRING,
+          qpc_v1           STRING,
+          dk_v2            STRING,
+          dk_v1            STRING,
+          qpc_hafs         STRING,
+
+          is_ayah_marker   BOOLEAN
+      )
+    SQL
+
+    layout_created = {}
+
+    mushafs.each do |mushaf|
+      db_name = get_mushaf_file_name(mushaf.id)
+      next if db_name.blank? || layout_created[db_name]
+
+      layout_created[db_name] = true
+      stats[:exported_layouts] ||= {}
+      stats[:exported_layouts][db_name] = {}
+
+      ExportedLayout.connection.execute <<~SQL
+         CREATE TABLE #{db_name} (
+         page         INTEGER,
+         line         INTEGER,
+         type         STRING,
+         is_centered  BOOLEAN,
+         range_start  INTEGER,
+         range_end    INTEGER
+        )
+      SQL
+    end
+  end
+
+  def add_db_indexes
+    ExportedWord.connection.execute "CREATE UNIQUE INDEX idx_words_word_number_all ON words(word_number_all)"
+    ExportedWord.connection.execute "CREATE INDEX idx_words_surah_ayah ON words(surah_number, ayah_number)"
+
+    # mushafs.each do |mushaf|
+    #  tbl_name = get_mushaf_file_name(mushaf.id)
+    #  ExportedLayout.connection.execute "CREATE INDEX #{tbl_name}_page ON #{tbl_name}(page)"
+    #  ExportedLayout.connection.execute "CREATE INDEX #{tbl_name}_line ON #{tbl_name}(line)"
+    # end
+  end
+
+  def bulk_insert_words(values)
+    return if values.blank?
+
+    conn = ExportedWord.connection
+
+    values_sql = values.map do |row|
+      "(#{row[0]}, #{row[1]}, #{row[2]}, #{row[3]}, #{conn.quote(row[4])}, #{conn.quote(row[5])}, #{conn.quote(row[6])}, #{conn.quote(row[7])}, #{conn.quote(row[8])}, #{conn.quote(row[9])}, #{conn.quote(row[10])}, #{conn.quote(row[11])}, #{row[12] ? 'TRUE' : 'FALSE'})"
+    end.join(', ')
+
+    conn.execute <<-SQL
+  INSERT INTO words (
+    surah_number,
+    ayah_number,
+    word_number,
+    word_number_all,
+    uthmani,
+    nastaleeq,
+    indopak,
+    dk_indopak,
+    qpc_v1,
+    dk_v2,
+    dk_v1,
+    qpc_hafs,
+    is_ayah_marker
+  ) VALUES
+    #{values_sql}
+    SQL
+  end
+
+  CUSTOM_TEXT = {
+    # Sajdah marker is with the ayah marker for ayah: 38:24
+    # https://qul.tarteel.ai/cms/mushaf_page_preview?page=454&mushaf=2&compare=22&word=27496
+    code_v1: {
+      '38:24:32': 'ﯩ',
+      '38:24:33': 'ﯪﯫ',
+    },
+    text_digital_khatt_v1: {
+      '38:24:32': 'وَأَنَابَ',
+      '38:24:33': '۩۝٢٤'
+    }
+  }
+
+  def get_word_text(word, script)
+    custom = CUSTOM_TEXT[script.to_sym] || {}
+
+    custom[word.location.to_sym] || word.send(script)
+  end
+
+  def prepare_layout_stats(mushaf, table_name)
+    page_count = mushaf.mushaf_pages.count
+    exported_words_count = 0
+    ExportedLayout.table_name = table_name
+
+    exported_page_count = ExportedLayout.connection.execute("SELECT COUNT(DISTINCT page) FROM #{table_name}").first[0]
+    lines_count_per_page = ExportedLayout.select(:page, 'COUNT(line) as lines').group(:page)
+
+    ExportedLayout.where(type: 'ayah').each do |line|
+      next if line.range_start.nil? || line.range_end.nil?
+      page_words = line.range_end - line.range_start + 1
+      exported_words_count += page_words
+    end
+
+    layout_stats = stats[:exported_layouts][table_name] || {}
+    stats[:exported_layouts][table_name] = {
+      mushaf_id: mushaf.id,
+      mushaf_name: mushaf.name,
+      surah_name_lines: ExportedLayout.where(type: 'surah_name').count + layout_stats[:surah_name_lines].to_i,
+      basmallah_lines: ExportedLayout.where(type: 'basmallah').count + layout_stats[:basmallah_lines].to_i,
+      ayah_lines: ExportedLayout.where(type: 'ayah').count + layout_stats[:ayah_lines].to_i,
+      total_lines: ExportedLayout.count + layout_stats[:total_lines].to_i,
+      mushaf_page_count: page_count + layout_stats[:mushaf_page_count].to_i,
+      exported_words_count: exported_words_count + layout_stats[:exported_words_count].to_i,
+      exported_page_count: exported_page_count + layout_stats[:exported_page_count].to_i
+    }
+
+    stats[:exported_layouts][table_name][:issues] ||= []
+    layout_stats = stats[:exported_layouts][table_name]
+
+    lines_count_per_page.each do |page|
+      mushaf_page = mushaf.mushaf_pages.find_by(page_number: page.page)
+      if page.lines != mushaf_page.lines_count
+        layout_stats[:issues].push("Page #{page.page} has #{page.lines} lines. Should have #{mushaf_page.lines_count} lines");
+      end
+    end
+
+    if layout_stats[:surah_name_lines] != 114
+      layout_stats[:issues].push("Surah name lines count is not 114")
+    end
+
+    if layout_stats[:total_lines] != mushaf.lines_count
+      possible_buggy_pages = ExportedLayout.group(:page).having('COUNT(line) != ?', mushaf.lines_per_page).pluck(:page).join(", ")
+      layout_stats[:issues].push("Total lines count is not equal to mushaf lines count. Should have #{mushaf.lines_count} lines. Please review these pages #{possible_buggy_pages}")
+    end
+
+    if layout_stats[:exported_words_count] != Word.count
+      layout_stats[:issues].push("Exported words count is not equal to total words count. Should have #{Word.count} words")
+    end
+
+    if layout_stats[:exported_page_count] != mushaf.pages_count
+      layout_stats[:issues].push("Exported page should be equal to mushaf page count. Should have #{mushaf.pages_count} words")
+    end
+
+    if layout_stats[:basmallah_lines] != 112
+      layout_stats[:issues].push("Basmallah lines count is not 112")
+    end
+
+    if layout_stats[:issues].blank?
+      layout_stats[:issues].push "Alhamdulillah no issues found."
+    end
+  end
+end

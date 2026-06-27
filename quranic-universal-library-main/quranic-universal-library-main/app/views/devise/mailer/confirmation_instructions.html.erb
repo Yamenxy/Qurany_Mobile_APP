@@ -1,0 +1,24 @@
+<h1 style="font-size: 24px; color: #333;">
+  Assalamu Alaikum, <%= @resource.first_name %>
+</h1>
+
+<p style="font-size: 16px; color: #333;">
+  Thank you for signing up with the Quranic Universal Library (QUL)! We're excited to have you on board.
+  Quranic Universal Library, is the largest library of Quranic content available for download. Build amazing projects
+  using these invaluable resources.
+</p>
+
+<p style="font-size: 16px; color: #333;">
+  To complete your registration, please confirm your email address by clicking the link below:
+</p>
+
+<p>
+  <%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token), class: "cta-button" %>
+</p>
+
+<p style="font-size: 16px; color: #333;">
+  We are delighted to have you join our community and look forward to seeing your contributions in improving Quranic
+  content.
+</p>
+
+<p style="color:#666666">If you did not sign up for a QUL account, please disregard this email.</p>

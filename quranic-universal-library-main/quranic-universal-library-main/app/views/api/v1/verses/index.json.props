@@ -1,0 +1,14 @@
+verses = @presenter.verses
+pagination = @presenter.pagination
+
+json.verses do
+  json.array! verses, partial: 'verse'
+end
+
+json.pagination do
+  json.next_page pagination.next
+  json.previous_page pagination.prev
+  json.total_pages pagination.pages
+  json.total_count pagination.count
+end
+

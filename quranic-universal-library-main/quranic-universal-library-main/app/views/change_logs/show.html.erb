@@ -1,0 +1,36 @@
+<% change_log = @presenter.change_log %>
+<%= render 'layouts/qul_head' %>
+
+<div class="container mx-auto px-6 py-10 space-y-8">
+  <div class="space-y-4">
+    <div>
+      <%= link_to 'Back to changelog', change_logs_path, class: 'text-blue-600 hover:text-blue-800 underline' %>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+      <div class="space-y-2">
+        <h2 class="text-2xl font-semibold text-gray-900"><%= change_log.title %></h2>
+        <div class="flex flex-wrap gap-3 text-sm text-gray-500">
+          <span><%= change_log.created_at.strftime('%B %d, %Y at %I:%M %P %Z') %></span>
+          <span class="badge badge-info"><%= change_log_resource_type(change_log) %></span>
+
+          <% if change_log_resource_path(change_log).present? %>
+            <%= link_to change_log.resource_content.name, change_log_resource_path(change_log), class: 'text-blue-600 hover:text-blue-800 underline' %>
+          <% else %>
+            <span><%= change_log.resource_content.name %></span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="text-sm text-gray-500">
+        <%= change_log.user.name %>
+      </div>
+    </div>
+  </div>
+
+  <article class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div class="trix-content text-gray-700">
+      <%= safe_html change_log.text %>
+    </div>
+  </article>
+</div>

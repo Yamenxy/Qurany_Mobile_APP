@@ -1,0 +1,20 @@
+<% errors_wrapper_id = local_assigns[:errors_wrapper_id] || 'form-error-wrapper' %>
+<% if object && object.errors.any? %>
+  <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 form-flash-message alert-dismissible">
+    <% heading = local_assigns[:header] || "<i class='fa fa-exclamation-triangle'></i> Whoops! There was a small problem.".html_safe %>
+    <% message = local_assigns[:message] || "You'll need to fix the following fields:".html_safe %>
+    <h3 class="font-semibold mb-2">
+      <%= heading %>
+    </h3>
+
+    <p class="mb-3"><%= message %></p>
+    <ul class="list-disc list-inside space-y-1">
+      <% object.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% else %>
+  <div id=<%= errors_wrapper_id %>>
+  </div>
+<% end %>

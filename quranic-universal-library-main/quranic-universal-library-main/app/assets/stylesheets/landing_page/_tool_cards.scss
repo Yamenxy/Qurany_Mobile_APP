@@ -1,0 +1,146 @@
+.card-container {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  > a {
+    color: white;
+    text-decoration: none;
+  }
+
+  @media (min-width: $screen-md) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (min-width: $screen-lg) {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+}
+
+a.tool-card-with-bg,
+.tool-card-with-bg {
+  text-decoration: none;
+  color: white;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.tool-card-with-bg{
+  height: 500px;
+  background-repeat: no-repeat !important;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+    border-radius: inherit;
+  }
+
+  .overlay ~ * {
+    position: relative;
+    color: white;
+  }
+
+  img{
+    width: 200px;
+    height: 200px;
+  }
+
+  .word img{
+    width: auto;
+    height: auto;
+  }
+  
+  &.segments, &.recitation, &.card-recitations {
+   background-image: url("tools-cards/timestamp.webp");
+  }
+  &.mushaf-layout, &.page-layout, &.card-mushaf-layouts {
+    backdrop-filter: brightness(1.2);
+    background-image: linear-gradient(rgba(245, 222, 179, 0.3), rgba(0, 0, 0, 0.5)), url("tools-cards/mushaf-layout.webp");
+  }
+
+  &.mutashabihat {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("tools-cards/mutashabihat.webp");
+  }
+
+  &.quranic-text {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url("tools-cards/quran.webp");
+  }
+
+  &.translation {
+    background-image: url("tools-cards/translation.webp");
+  }
+
+  &.transliteration{
+    background-image: url("tools-cards/transliteration.webp");
+  }
+  &.fonts{
+    background-image: url("tools-cards/transliteration.webp");
+  }
+  &.tafsirs {
+  //  backdrop-filter: brightness(0.2) sepia(1) saturate(2) hue-rotate(180deg); /* Add bluish tint */
+    background-image: linear-gradient(rgba(163, 136, 96, 0.8),rgba(130, 109, 77, 0.5)),url("tools-cards/tafsirs.webp");
+  }
+
+  &.metadata{
+    background-image: url("tools-cards/meta.webp");
+  }
+
+  &.surah-info{
+    background-image: linear-gradient(rgba(67, 27, 116, 0.8), rgba(92, 45, 138, 0.8)), url("tools-cards/surah-info.webp");
+  }
+
+  &.ayah-topics{
+    background-image: url("tools-cards/meta.webp");
+  }
+  &.grammar-morphology{
+    background-image: linear-gradient(rgba(196, 73, 0, 0.8), rgba(67, 37, 52, 0.5)), url("tools-cards/grammar.webp");
+  }
+
+  &.pattern1{
+    background-image: url("svg/pattern-1.svg"), linear-gradient(rgba(99, 110, 114, 0.8), #0984e3);
+  }
+  &.pattern2{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#218c74, #84817a);
+  }
+  &.pattern3{
+    background-image: url("svg/pattern-3.svg"), linear-gradient(#d63031,rgba(154, 3, 30, 0.3));
+  }
+  &.pattern4{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#fd79a8, #0984e3);
+  }
+  &.pattern5{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#00b894, #0984e3);
+  }
+  &.pattern6{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#3ae374, #7158e2);
+  }
+  &.pattern7{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#fd79a8, #ff793f);
+  }
+  &.pattern8{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#ff9f1a, #ff3838);
+  }
+  &.pattern9{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#2c2c54, #cd6133);
+  }
+  &.pattern10{
+    background-image: url("svg/pattern-4.svg"), linear-gradient(#b33939, #34ace0);
+  }
+
+  @media (max-width: $screen-md) {
+    img {
+      width: 100px;
+      height: 100px;
+    }
+  }
+}
+
+
+
+

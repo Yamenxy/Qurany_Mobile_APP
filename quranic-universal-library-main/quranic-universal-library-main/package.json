@@ -1,0 +1,96 @@
+{
+  "name": "qul",
+  "private": "true",
+  "dependencies": {
+    "@hotwired/stimulus": "^3.0.1",
+    "@hotwired/turbo-rails": "^7.1.0",
+    "@popperjs/core": "^2.11.0",
+    "@rails/actiontext": "^8.0.200",
+    "@splinetool/loader": "^1.9.0",
+    "@syncfusion/ej2-layouts": "^22.1.37",
+    "@vueform/slider": "^2.0.8",
+    "buffer": "^6.0.3",
+    "chart.js": "^4.4.9",
+    "chartkick": "^5.0.1",
+    "chokidar": "^3.6.0",
+    "copy-to-clipboard": "^3.3.3",
+    "dom-to-image-more": "^3.7.2",
+    "esbuild": "0.21.2",
+    "esbuild-plugin-vue3": "^0.4.0",
+    "esbuild-rails": "^1.0.7",
+    "fontkit": "^2.0.4",
+    "hotkeys-js": "^3.8.7",
+    "howler": "^2.2.4",
+    "jquery": "3.7.1",
+    "jquery-ui": "^1.13.2",
+    "jquery-ujs": "^1.2.3",
+    "local-time": "^2.1.0",
+    "npm-run-all": "^4.1.5",
+    "raphael": "^2.3.0",
+    "sass": "^1.44.0",
+    "select2": "^4.1.0-rc.0",
+    "simplify-js": "^1.2.4",
+    "snapsvg": "^0.5.1",
+    "sortablejs": "^1.15.2",
+    "svg-points": "^6.0.1",
+    "three": "^0.166.1",
+    "toastr": "^2.1.4",
+    "trix": "^2.1.13",
+    "utf8": "^3.0.0",
+    "vue": "^3.2.24",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@linthtml/linthtml": "^0.9.5",
+    "@rushstack/eslint-patch": "^1.10.3",
+    "@size-limit/esbuild": "^11.0.0",
+    "@size-limit/esbuild-why": "^11.0.0",
+    "cypress": "^13.17.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.2.5",
+    "puppeteer": "23.3.0",
+    "sass-migrator": "^1.7.3",
+    "size-limit": "^11.0.0",
+    "size-limit-node-esbuild": "^0.3.0"
+  },
+  "scripts": {
+    "lint": "eslint \"app/javascript/src/**/*.{js,jsx,vue}\"",
+    "lint:fix": "eslint --fix \"app/javascript/**/*.{js,jsx,vue}\"",
+    "size": "yarn run build && size-limit",
+    "format": "prettier-standard --format",
+    "build": "node esbuild.config.js",
+    "build:css": "npm-run-all --parallel \"build:css:* {@}\" --",
+    "build:css:application": "sass ./app/assets/stylesheets/application.scss ./app/assets/builds/application.css --no-source-map --load-path=node_modules",
+    "build:css:tailwind": "bin/rails tailwindcss:build",
+    "build:css:active_admin": "sass ./app/assets/stylesheets/active_admin.scss ./app/assets/builds/active_admin.css --no-source-map --load-path=node_modules",
+    "build:css:pdf": "sass ./app/assets/stylesheets/pdf.scss ./app/assets/builds/pdf.css --no-source-map --load-path=node_modules --load-path=app/assets/custom-plugins",
+    "build:css:tinymce_custom": "sass ./app/assets/stylesheets/tinymce_custom.scss ./app/assets/builds/tinymce_custom.css --no-source-map --load-path=node_modules --style=compressed",
+    "build:css:landing": "sass ./app/assets/stylesheets/landing.scss ./app/assets/builds/landing.css --no-source-map --load-path=node_modules --style=compressed",
+    "build:css:export": "sass ./app/assets/stylesheets/export.scss ./app/assets/builds/export.css --no-source-map --load-path=node_modules --style=compressed"
+  },
+  "lint-staged": {
+    "app/**/*.{js,jsx,json}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "{package.json,.eslintrc.js,.prettierrc.js}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    ".eslint-rules/**/*": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "./**/*.rb": [
+      "bundle exec rubocop -a --force-exclusion"
+    ],
+    "{Gemfile,Rakefile,config.ru}": [
+      "bundle exec rubocop -a --force-exclusion"
+    ],
+    "app/views/**/*.html.erb": [
+      "bundle exec erblint --lint-all --format compact -a"
+    ]
+  }
+}

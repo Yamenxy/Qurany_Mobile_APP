@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <%= render 'shared/meta_tags' %>
+    <%= stylesheet_link_tag "landing", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload" %>
+  </head>
+
+  <body class="font-inter relative" data-controller="event-tracker">
+    <%= render 'shared/flash_notices' %>
+    <%= render 'landing/header' %>
+    <%= yield %>
+    <%= render 'landing/footer' %>
+  </body>
+</html>
