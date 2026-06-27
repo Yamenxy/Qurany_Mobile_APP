@@ -1,1 +1,0 @@
-ActiveStorage.service_urls_expire_in = 2.weeks

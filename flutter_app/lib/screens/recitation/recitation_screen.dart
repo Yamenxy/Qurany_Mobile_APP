@@ -13,10 +13,10 @@ import '../../config/constants.dart';
 import '../../models/verse.dart';
 import '../../models/recitation_session.dart';
 import '../../services/audio_service.dart';
-import '../../services/api_service.dart';
 import '../../services/quran_service.dart';
 import '../../services/recitation_history_service.dart';
 import '../../services/schedule_service.dart';
+import '../../widgets/app_icons.dart';
 
 class RecitationScreen extends StatefulWidget {
   final int? surahNumber;
@@ -37,7 +37,6 @@ class RecitationScreen extends StatefulWidget {
 class _RecitationScreenState extends State<RecitationScreen>
     with TickerProviderStateMixin {
   final AudioService _audioService = AudioService();
-  final ApiService _apiService = ApiService();
 
   // Speech recognition
   final stt.SpeechToText _speech = stt.SpeechToText();
@@ -60,8 +59,6 @@ class _RecitationScreenState extends State<RecitationScreen>
   // Real-time transcription
   String _liveTranscription = '';
   List<_WordMatch> _matchedWords = [];
-  Timer? _streamingTimer;
-  String _sessionId = '';
 
   // Audio visualization
   StreamSubscription<double>? _amplitudeSubscription;
@@ -81,13 +78,6 @@ class _RecitationScreenState extends State<RecitationScreen>
   double _husaryProgress = 0.0;
   StreamSubscription? _husaryPositionSub;
   StreamSubscription? _husaryCompleteSub;
-
-  // Audio backup tracking
-  bool _audioServiceActive = false;
-  int _speechTimeoutCount = 0; // Track consecutive speech timeouts with no text
-  Timer? _speechFallbackTimer; // Auto-switch to AudioService if speech captures nothing
-
-
 
   // Animation controllers
   late AnimationController _pulseController;
@@ -123,38 +113,16 @@ class _RecitationScreenState extends State<RecitationScreen>
       _speechAvailable = await _speech.initialize(
         onError: (error) {
           debugPrint('Speech error: ${error.errorMsg}');
-          if (_audioServiceActive) return;
           if (_isRecording &&
               (error.errorMsg == 'error_no_match' ||
                error.errorMsg == 'error_speech_timeout' ||
                error.errorMsg == 'error_busy' ||
                error.errorMsg == 'error_client')) {
-            // If speech keeps timing out with no text, switch to AudioService
-            if (_liveTranscription.isEmpty) {
-              _speechTimeoutCount++;
-              debugPrint('Speech timeout #$_speechTimeoutCount (no text captured)');
-              if (_speechTimeoutCount >= 2 && !_audioServiceActive) {
-                debugPrint('Switching to AudioService backup after $_speechTimeoutCount timeouts');
-                _startAudioServiceBackup();
-              }
-            } else {
-              _speechTimeoutCount = 0; // Reset if we have text
-            }
             _restartSpeechListening();
           }
         },
         onStatus: (status) {
           debugPrint('Speech status: $status');
-          if (_audioServiceActive) return;
-          if (status == 'done' && _isRecording && _liveTranscription.isEmpty) {
-            _speechTimeoutCount++;
-            debugPrint('Speech done with no text (cycle $_speechTimeoutCount)');
-            if (_speechTimeoutCount >= 2 && !_audioServiceActive) {
-              debugPrint('Switching to AudioService after $_speechTimeoutCount empty cycles');
-              _startAudioServiceBackup();
-              return; // Don't restart speech
-            }
-          }
           if (status == 'notListening' && _isRecording && _usingSpeechRecognition) {
             _restartSpeechListening();
           }
@@ -171,9 +139,9 @@ class _RecitationScreenState extends State<RecitationScreen>
 
   /// Restart speech listening (called when engine auto-stops)
   void _restartSpeechListening() {
-    if (!_isRecording || !_speechAvailable || _audioServiceActive) return;
+    if (!_isRecording || !_speechAvailable) return;
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (_isRecording && mounted && !_audioServiceActive) {
+      if (_isRecording && mounted) {
         _startSpeechListening();
       }
     });
@@ -181,39 +149,9 @@ class _RecitationScreenState extends State<RecitationScreen>
 
   bool get _isVerseMode => widget.mode == 'tahfeez' || widget.mode == 'tasmee3';
 
-  /// Start AudioService as backup when speech_to_text keeps failing
-  Future<void> _startAudioServiceBackup() async {
-    if (_audioServiceActive) return;
-    try {
-      // Stop speech first to release the mic
-      await _speech.stop();
-      _usingSpeechRecognition = false;
-
-      _audioServiceActive = await _audioService.startRecording();
-      if (_audioServiceActive) {
-        debugPrint('AudioService backup started successfully');
-        _amplitudeSubscription?.cancel();
-        _amplitudeSubscription = _audioService.amplitudeStream.listen((amp) {
-          if (mounted) {
-            setState(() {
-              _amplitudes = [..._amplitudes.skip(1), amp];
-            });
-          }
-        });
-        if (mounted) {
-          setState(() {
-            _statusText = 'جاري التسجيل... اقرأ الآن';
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('AudioService backup failed: $e');
-    }
-  }
-
   /// Start the speech listening session
   void _startSpeechListening() {
-    if (!_speechAvailable || _audioServiceActive) return;
+    if (!_speechAvailable) return;
     debugPrint('Starting speech listening...');
     _speech.listen(
       onResult: _onSpeechResult,
@@ -236,9 +174,6 @@ class _RecitationScreenState extends State<RecitationScreen>
     final recognizedText = result.recognizedWords;
     debugPrint('Speech result: "$recognizedText" (final: ${result.finalResult})');
     if (recognizedText.isEmpty) return;
-
-    // Cancel fallback timer since speech IS working
-    _speechFallbackTimer?.cancel();
 
     setState(() {
       _liveTranscription = recognizedText;
@@ -265,8 +200,6 @@ class _RecitationScreenState extends State<RecitationScreen>
   void dispose() {
     _amplitudeSubscription?.cancel();
     _durationSubscription?.cancel();
-    _streamingTimer?.cancel();
-    _speechFallbackTimer?.cancel();
     _husaryPositionSub?.cancel();
     _husaryCompleteSub?.cancel();
     _husaryPlayer.dispose();
@@ -311,8 +244,6 @@ class _RecitationScreenState extends State<RecitationScreen>
     WakelockPlus.enable();
 
     _pulseController.repeat(reverse: true);
-    _sessionId = const Uuid().v4();
-    _speechTimeoutCount = 0;
 
     // Pre-populate matchedWords with all reference words in "pending" state
     // so the highlighted view is shown immediately during recording
@@ -331,114 +262,37 @@ class _RecitationScreenState extends State<RecitationScreen>
       _statusText = 'جاري التسجيل... اقرأ الآن';
     });
 
-    // Strategy: speech_to_text and AudioService both use the mic.
-    // On Android, AudioService (record pkg) requests exclusive audio focus,
-    // which kills speech_to_text. So we must choose ONE:
-    //   - If speech_to_text is available → use it exclusively (live text)
-    //   - If speech_to_text is NOT available → use AudioService (file for backend)
-
+    // Use on-device speech recognition for live transcription
     _usingSpeechRecognition = false;
-    _audioServiceActive = false;
 
     if (_speechAvailable) {
-      // Use speech_to_text exclusively — no AudioService to avoid mic conflict
       _startSpeechListening();
-      // Simple timer for duration display
       _durationSubscription = Stream.periodic(
         const Duration(seconds: 1),
         (i) => i + 1,
       ).listen((dur) {
         if (mounted) setState(() => _recordingSeconds = dur);
       });
-
-      // Fallback: if speech captures no text within 3 seconds,
-      // switch to AudioService (backend transcription via Whisper)
-      _speechFallbackTimer?.cancel();
-      _speechFallbackTimer = Timer(const Duration(seconds: 3), () {
-        if (_isRecording && _liveTranscription.isEmpty && !_audioServiceActive) {
-          debugPrint('Speech produced no text after 3s — switching to AudioService');
-          _startAudioServiceBackup();
-        }
-      });
     } else {
-      // No speech_to_text — use AudioService for file recording + backend
-      try {
-        _audioServiceActive = await _audioService.startRecording();
-      } catch (e) {
-        debugPrint('AudioService start failed: $e');
-      }
-
-      if (_audioServiceActive) {
-        // Listen to amplitude for visualizer
-        _amplitudeSubscription = _audioService.amplitudeStream.listen((amp) {
-          if (mounted) {
-            setState(() {
-              _amplitudes = [..._amplitudes.skip(1), amp];
-            });
-          }
-        });
-        // Listen to duration
-        _durationSubscription = _audioService.durationStream.listen((dur) {
-          if (mounted) setState(() => _recordingSeconds = dur);
-        });
-      } else {
-        // Neither available
-        _durationSubscription = Stream.periodic(
-          const Duration(seconds: 1),
-          (i) => i + 1,
-        ).listen((dur) {
-          if (mounted) setState(() => _recordingSeconds = dur);
-        });
-      }
-    }
-
-    // Backend streaming as additional path (when no live speech)
-    if (!_speechAvailable && _audioServiceActive) {
-      _streamingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-        _sendStreamChunk();
-      });
-    }
-
-    // If nothing started at all, show error
-    if (!_audioServiceActive && !_usingSpeechRecognition) {
       _pulseController.stop();
       _pulseController.reset();
       WakelockPlus.disable();
       setState(() {
         _isRecording = false;
-        _statusText = 'فشل بدء التسجيل. تأكد من إعطاء إذن الميكروفون.';
+        _statusText =
+            'التعرف على الكلام غير متاح على هذا الجهاز. تأكد من إعطاء إذن الميكروفون.';
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('فشل بدء التسجيل. تأكد من إعطاء إذن الميكروفون.'),
+            content: Text(
+              'التعرف على الكلام غير متاح. تأكد من إعطاء إذن الميكروفون.',
+            ),
             backgroundColor: QuranyTheme.errorRed,
           ),
         );
       }
-    }
-  }
-
-  /// Send current audio for backend transcription (fallback when speech_to_text unavailable)
-  Future<void> _sendStreamChunk() async {
-    if (!_isRecording) return;
-    try {
-      final result = await _apiService.streamAudioChunk(
-        audioData: [],
-        sessionId: _sessionId,
-        surahNumber: _selectedSurah,
-      );
-      if (mounted && _isRecording) {
-        final text = result['text'] as String? ?? '';
-        if (text.isNotEmpty) {
-          setState(() {
-            _liveTranscription = text;
-            _updateWordMatching(text);
-          });
-        }
-      }
-    } catch (_) {
-      // Backend not available either — no real transcription possible
+      return;
     }
   }
 
@@ -700,20 +554,10 @@ class _RecitationScreenState extends State<RecitationScreen>
     _pulseController.reset();
     _amplitudeSubscription?.cancel();
     _durationSubscription?.cancel();
-    _streamingTimer?.cancel();
-    _speechFallbackTimer?.cancel();
 
-    // Stop speech recognition
     if (_usingSpeechRecognition) {
       await _speech.stop();
       _usingSpeechRecognition = false;
-    }
-
-    // Stop AudioService and get recorded file path
-    String? filePath;
-    if (_audioServiceActive) {
-      filePath = await _audioService.stopRecording();
-      _audioServiceActive = false;
     }
 
     setState(() {
@@ -743,52 +587,17 @@ class _RecitationScreenState extends State<RecitationScreen>
       return;
     }
 
-    // Priority 1: Speech recognition produced text → use local comparison
+    // Use on-device speech recognition for comparison
     if (_liveTranscription.isNotEmpty && mounted) {
-      // If we also have a recorded file, try backend for a more accurate result
-      if (filePath != null) {
-        try {
-          final result = await _apiService.transcribeAndCompare(
-            audioFilePath: filePath,
-            surahNumber: _selectedSurah,
-          );
-          if (mounted) {
-            _saveAndNavigateToResult(result);
-            return;
-          }
-        } catch (_) {
-          // Backend unavailable — fall through to local comparison
-        }
-      }
-      if (mounted) {
-        _performLocalComparison();
-      }
+      _performLocalComparison();
       return;
     }
 
-    // Priority 2: No speech text, but we have an audio file → try backend
-    if (filePath != null && mounted) {
-      try {
-        final result = await _apiService.transcribeAndCompare(
-          audioFilePath: filePath,
-          surahNumber: _selectedSurah,
-        );
-        if (mounted) {
-          _saveAndNavigateToResult(result);
-          return;
-        }
-      } catch (e) {
-        debugPrint('Backend transcription failed: $e');
-      }
-    }
-
-    // Priority 3: Nothing worked — show helpful error
     if (mounted) {
       setState(() {
         _isProcessing = false;
         _statusText = 'لم يتم التعرف على النص. حاول:\n'
             '• القراءة بصوت واضح وقريب من الميكروفون\n'
-            '• تشغيل الخادم الخلفي (Backend Server)\n'
             '• استخدام جهاز حقيقي بدلاً من المحاكي';
       });
     }
@@ -1040,7 +849,7 @@ class _RecitationScreenState extends State<RecitationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: QuranyTheme.background,
       appBar: AppBar(
         title: Text(
           widget.mode == 'memorization'
@@ -1051,8 +860,8 @@ class _RecitationScreenState extends State<RecitationScreen>
                       ? 'تسميع'
                       : 'التلاوة',
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
+        leading: AppIcons.backButton(
+          context: context,
           onPressed: () {
             if (_isRecording) {
               _audioService.cancelRecording();
@@ -1074,17 +883,12 @@ class _RecitationScreenState extends State<RecitationScreen>
       ),
       body: Column(
         children: [
-          // Surah info bar
           _buildSurahInfoBar(),
-
-          // Main content area
           Expanded(
             child: _isLoadingVerses
                 ? const Center(child: CircularProgressIndicator())
                 : _buildMainContent(),
           ),
-
-          // Recording controls
           _buildRecordingControls(),
         ],
       ),
@@ -1098,7 +902,8 @@ class _RecitationScreenState extends State<RecitationScreen>
         color: QuranyTheme.primaryGreen.withValues(alpha: 0.05),
         border: Border(
           bottom: BorderSide(
-              color: QuranyTheme.primaryGreen.withValues(alpha: 0.1)),
+            color: QuranyTheme.primaryGreen.withValues(alpha: 0.1),
+          ),
         ),
       ),
       child: Row(
@@ -1177,7 +982,6 @@ class _RecitationScreenState extends State<RecitationScreen>
     );
   }
 
-  // Mode badge helpers
   Color get _modeBadgeColor {
     switch (widget.mode) {
       case 'tahfeez':
@@ -1546,10 +1350,11 @@ class _RecitationScreenState extends State<RecitationScreen>
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_forward_ios, size: 18),
-                color: _currentVerseIndex > 0
-                    ? const Color(0xFF1565C0)
-                    : Colors.grey.shade300,
+                icon: AppIcons.navPrevious(
+                  color: _currentVerseIndex > 0
+                      ? const Color(0xFF1565C0)
+                      : Colors.grey.shade300,
+                ),
                 onPressed: _currentVerseIndex > 0 && !_isRecording && !_isPlayingHusary
                     ? _tahfeezPrevVerse
                     : null,
@@ -1567,10 +1372,11 @@ class _RecitationScreenState extends State<RecitationScreen>
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
-                color: _currentVerseIndex < _verses.length - 1
-                    ? const Color(0xFF1565C0)
-                    : Colors.grey.shade300,
+                icon: AppIcons.navNext(
+                  color: _currentVerseIndex < _verses.length - 1
+                      ? const Color(0xFF1565C0)
+                      : Colors.grey.shade300,
+                ),
                 onPressed: _currentVerseIndex < _verses.length - 1 &&
                         !_isRecording &&
                         !_isPlayingHusary
@@ -1672,7 +1478,7 @@ class _RecitationScreenState extends State<RecitationScreen>
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
+                  backgroundColor: QuranyTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -1697,8 +1503,8 @@ class _RecitationScreenState extends State<RecitationScreen>
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade700,
-                  foregroundColor: Colors.white,
+                  backgroundColor: QuranyTheme.accent,
+                  foregroundColor: QuranyTheme.forest,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -1790,7 +1596,7 @@ class _RecitationScreenState extends State<RecitationScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _tahfeezNextVerse,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: AppIcons.actionForward(color: Colors.white),
               label: const Text('الآية التالية'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1565C0),
@@ -1967,10 +1773,12 @@ class _RecitationScreenState extends State<RecitationScreen>
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_forward_ios, size: 18),
-                color: _currentVerseIndex > 0
-                    ? const Color(0xFF6A1B9A)
-                    : Colors.grey.shade300,
+                icon: AppIcons.navPrevious(
+                  color: _currentVerseIndex > 0
+                      ? const Color(0xFF6A1B9A)
+                      : Colors.grey.shade300,
+                  size: 18,
+                ),
                 onPressed: _currentVerseIndex > 0 && !_isRecording && !_isPlayingHusary
                     ? _tasmee3PrevVerse
                     : null,
@@ -1988,10 +1796,12 @@ class _RecitationScreenState extends State<RecitationScreen>
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
-                color: _currentVerseIndex < _verses.length - 1
-                    ? const Color(0xFF6A1B9A)
-                    : Colors.grey.shade300,
+                icon: AppIcons.navNext(
+                  color: _currentVerseIndex < _verses.length - 1
+                      ? const Color(0xFF6A1B9A)
+                      : Colors.grey.shade300,
+                  size: 18,
+                ),
                 onPressed: _currentVerseIndex < _verses.length - 1 &&
                         !_isRecording &&
                         !_isPlayingHusary
@@ -2091,7 +1901,7 @@ class _RecitationScreenState extends State<RecitationScreen>
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
+                  backgroundColor: QuranyTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -2116,8 +1926,8 @@ class _RecitationScreenState extends State<RecitationScreen>
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade700,
-                  foregroundColor: Colors.white,
+                  backgroundColor: QuranyTheme.accent,
+                  foregroundColor: QuranyTheme.forest,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -2235,7 +2045,7 @@ class _RecitationScreenState extends State<RecitationScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _tasmee3NextVerse,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: AppIcons.actionForward(color: Colors.white),
               label: const Text('الآية التالية'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6A1B9A),
@@ -2346,7 +2156,7 @@ class _RecitationScreenState extends State<RecitationScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: QuranyTheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
@@ -2359,7 +2169,6 @@ class _RecitationScreenState extends State<RecitationScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Waveform visualizer
           if (_isRecording)
             SizedBox(
               height: 50,
@@ -2377,10 +2186,7 @@ class _RecitationScreenState extends State<RecitationScreen>
                 },
               ),
             ),
-
           if (_isRecording) const SizedBox(height: 8),
-
-          // Duration & status
           if (_isRecording)
             Text(
               _audioService.formatDuration(_recordingSeconds),
@@ -2391,7 +2197,6 @@ class _RecitationScreenState extends State<RecitationScreen>
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
-
           Text(
             _statusText,
             style: TextStyle(
@@ -2415,8 +2220,6 @@ class _RecitationScreenState extends State<RecitationScreen>
               ),
             ),
           const SizedBox(height: 16),
-
-          // Record button
           if (_isProcessing)
             Column(
               children: [
@@ -2432,7 +2235,7 @@ class _RecitationScreenState extends State<RecitationScreen>
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'جاري تحليل التلاوة بالذكاء الاصطناعي...',
+                  'جاري تحليل التلاوة...',
                   style: TextStyle(
                     fontSize: 14,
                     color: QuranyTheme.primaryGreen,
@@ -2445,15 +2248,12 @@ class _RecitationScreenState extends State<RecitationScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Cancel button (only during recording)
                 if (_isRecording)
                   GestureDetector(
                     onTap: () {
                       _audioService.cancelRecording();
                       _speech.stop();
                       _usingSpeechRecognition = false;
-                      _audioServiceActive = false;
-                      _streamingTimer?.cancel();
                       _amplitudeSubscription?.cancel();
                       _durationSubscription?.cancel();
                       _pulseController.stop();
@@ -2478,10 +2278,7 @@ class _RecitationScreenState extends State<RecitationScreen>
                       child: const Icon(Icons.close, color: Colors.grey),
                     ),
                   ),
-
                 if (_isRecording) const SizedBox(width: 24),
-
-                // Main record button
                 GestureDetector(
                   onTap: _isProcessing ? null : _toggleRecording,
                   child: AnimatedBuilder(
@@ -2497,10 +2294,10 @@ class _RecitationScreenState extends State<RecitationScreen>
                         btnColor = QuranyTheme.errorRed;
                         btnIcon = Icons.stop_rounded;
                       } else if (widget.mode == 'tahfeez' && _isPlayingHusary) {
-                        btnColor = Colors.orange.shade700;
+                        btnColor = QuranyTheme.accent;
                         btnIcon = Icons.skip_next_rounded;
                       } else if (widget.mode == 'tahfeez' && !_husaryFinished) {
-                        btnColor = const Color(0xFF2E7D32);
+                        btnColor = QuranyTheme.primary;
                         btnIcon = Icons.play_circle_fill;
                       } else {
                         btnColor = QuranyTheme.primaryGreen;
@@ -2530,14 +2327,11 @@ class _RecitationScreenState extends State<RecitationScreen>
                     },
                   ),
                 ),
-
                 if (_isRecording) const SizedBox(width: 24),
-
                 if (_isRecording)
                   const SizedBox(width: 48, height: 48),
               ],
             ),
-
           const SizedBox(height: 8),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,17 +48,22 @@ class QuranyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Qurany',
         debugShowCheckedModeBanner: false,
+        locale: const Locale('ar'),
+        supportedLocales: const [Locale('ar')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: QuranyTheme.lightTheme,
         darkTheme: QuranyTheme.darkTheme,
         themeMode: ThemeMode.light,
         initialRoute: AppRoutes.splash,
         onGenerateRoute: AppRoutes.generateRoute,
-        builder: (context, child) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
-            child: child!,
-          );
-        },
+        builder: (context, child) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: child!,
+        ),
       ),
     );
   }

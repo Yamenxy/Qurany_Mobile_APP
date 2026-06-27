@@ -5,6 +5,7 @@ import '../../../config/theme.dart';
 
 class MushafPageWidget extends StatelessWidget {
   final MushafPage page;
+  final String? surahTitle;
   final double fontSize;
   final String fontFamily;
   final int? selectedWordIndex;
@@ -14,6 +15,7 @@ class MushafPageWidget extends StatelessWidget {
   const MushafPageWidget({
     super.key,
     required this.page,
+    this.surahTitle,
     required this.fontSize,
     required this.fontFamily,
     this.selectedWordIndex,
@@ -26,8 +28,8 @@ class MushafPageWidget extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     // Choose colors based on theme
-    final pageBgColor = isDarkMode ? const Color(0xFF1E281F) : QuranyTheme.cream;
-    final borderColor = QuranyTheme.primaryGold;
+    final pageBgColor = isDarkMode ? const Color(0xFF1E281F) : QuranyTheme.section;
+    final borderColor = QuranyTheme.primary;
     final textColor = isDarkMode ? const Color(0xFFF1F1F1) : QuranyTheme.darkGreen;
     final bannerBgColor = isDarkMode ? const Color(0xFF0D1C0F) : QuranyTheme.lightGreen;
 
@@ -42,13 +44,13 @@ class MushafPageWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 10,
+                color: QuranyTheme.shadow,
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(
-              color: borderColor.withOpacity(0.3),
+              color: borderColor.withValues(alpha: 0.18),
               width: 1,
             ),
           ),
@@ -56,8 +58,8 @@ class MushafPageWidget extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(
-                color: borderColor.withOpacity(0.6),
-                width: 2,
+                color: borderColor.withValues(alpha: 0.35),
+                width: 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -65,7 +67,12 @@ class MushafPageWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: page.lines.map((line) {
                 if (line.isSurahName) {
-                  return _buildSurahNameBanner(context, line, bannerBgColor, borderColor);
+                  return _buildSurahNameBanner(
+                    context,
+                    line,
+                    bannerBgColor,
+                    borderColor,
+                  );
                 } else if (line.isBasmallah) {
                   return _buildBasmallah(context, line, textColor);
                 } else {
@@ -85,10 +92,10 @@ class MushafPageWidget extends StatelessWidget {
     Color bannerBg,
     Color borderCol,
   ) {
-    // Determine Surah Name from text in layout, e.g. "surah017" -> "سُورَةُ الإِسْرَاءِ"
-    String surahTitle = "سُورَةُ الإِسْرَاءِ";
-    if (line.text.contains("17") || line.text.contains("017")) {
-      surahTitle = "سُورَةُ الإِسْرَاءِ";
+    // Prefer explicit surah title; fall back to layout line text.
+    String title = surahTitle ?? line.text;
+    if (title.startsWith('surah')) {
+      title = 'سُورَةُ الإِسْرَاءِ';
     }
 
     return Container(
@@ -105,12 +112,12 @@ class MushafPageWidget extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          surahTitle,
+          title,
           style: TextStyle(
             fontFamily: fontFamily,
             fontSize: fontSize * 0.9,
             fontWeight: FontWeight.bold,
-            color: QuranyTheme.primaryGold,
+            color: QuranyTheme.primary,
           ),
           textAlign: TextAlign.center,
           textDirection: TextDirection.rtl,
@@ -158,9 +165,9 @@ class MushafPageWidget extends StatelessWidget {
 
       Color? wordBgColor;
       if (isWordSelected) {
-        wordBgColor = QuranyTheme.primaryGold.withOpacity(0.4);
+        wordBgColor = QuranyTheme.primary.withValues(alpha: 0.22);
       } else if (isAyahSelected) {
-        wordBgColor = QuranyTheme.primaryGold.withOpacity(0.15);
+        wordBgColor = QuranyTheme.accent.withValues(alpha: 0.18);
       }
 
       // Add a tap recognizer
@@ -176,7 +183,7 @@ class MushafPageWidget extends StatelessWidget {
           style: TextStyle(
             fontFamily: fontFamily,
             fontSize: fontSize,
-            color: word.isAyahMarker ? QuranyTheme.primaryGold : textCol,
+            color: word.isAyahMarker ? QuranyTheme.accent : textCol,
             fontWeight: word.isAyahMarker ? FontWeight.bold : FontWeight.normal,
             backgroundColor: wordBgColor,
           ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../config/routes.dart';
 import '../services/auth_service.dart';
+import '../services/quran_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,6 +36,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<QuranService>().loadRandomVerse();
+      }
+    });
+
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
       final auth = context.read<AuthService>();
@@ -63,9 +70,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              QuranyTheme.darkGreen,
-              QuranyTheme.primaryGreen,
-              Color(0xFF2E7D32),
+              QuranyTheme.forest,
+              QuranyTheme.primaryDark,
+              QuranyTheme.primary,
             ],
           ),
         ),

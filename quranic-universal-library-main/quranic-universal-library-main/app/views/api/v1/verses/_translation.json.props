@@ -1,2 +1,0 @@
- json.extract! translation, :id, :text
- json.name translation.resource_name

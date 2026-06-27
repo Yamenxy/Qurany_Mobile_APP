@@ -1,16 +1,38 @@
 # qurany_app
 
-A new Flutter project.
+Flutter mobile app for Qurany.
 
-## Getting Started
+## Run the app
 
-This project is a starting point for a Flutter application.
+### 1. Start an Android emulator
 
-A few resources to get you started if this is your first Flutter project:
+The emulator must be running **before** `flutter run`. Either:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Android Studio** → Device Manager → start **Pixel_API_34** (or another AVD), or
+- From a terminal (with `ANDROID_HOME` set):
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+emulator -avd Pixel_API_34
+```
+
+Wait until the emulator shows the Android home screen.
+
+### 2. Install dependencies and run
+
+From this directory (`flutter_app`):
+
+```bash
+flutter pub get
+flutter devices
+flutter run
+```
+
+`flutter devices` lists connected targets. Pick the Android emulator from that list (often `emulator-5554`).
+
+To target a specific device:
+
+```bash
+flutter run -d emulator-5554
+```
+
+Use the exact id shown by `flutter devices` — it changes if you restart the emulator.

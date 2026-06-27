@@ -1,4 +1,66 @@
+# ── IDE & editor ──────────────────────────────────────────
 .vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ── Python / Node ─────────────────────────────────────────
 .venv/
+venv/
+__pycache__/
+*.py[cod]
 node_modules/
 package-lock.json
+.expo/
+.expo-shared/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Legacy / removed app stacks ───────────────────────────
+Frontend/
+backend/
+quranic-universal-library/
+quranic-universal-library-main/
+
+# ── External / sibling projects (not part of this repo) ───
+Tarteel-AI-Model/
+
+# ── Uploaded docs & presentations ─────────────────────────
+Documents/
+docs/*.pdf
+docs/*.ppt
+docs/*.pptx
+docs/*.docx
+docs/*.doc
+
+# ── Audio / media uploads & test recordings ───────────────
+records/
+*.mp3
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.flac
+*.dat
+cleaned_audio.*
+
+# ── Duplicate / loose root assets (use flutter_app/assets/) ─
+/Fonts/
+/theLogo.png
+Al-Isra.txt
+
+# ── OS & tooling ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.github/modernize/
+
+# ── Logs & env secrets ────────────────────────────────────
+*.log
+.env
+.env.*
+!.env.sample

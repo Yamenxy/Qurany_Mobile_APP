@@ -11,6 +11,7 @@ import '../../models/mushaf_layout.dart';
 import '../../services/quran_service.dart';
 import '../../services/bookmark_service.dart';
 import 'widgets/mushaf_page_widget.dart';
+import '../../widgets/app_icons.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   final int surahNumber;
@@ -40,6 +41,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   String _selectedFontFamily = 'QPCHafs';
   int? _selectedWordIndex;
   int? _selectedAyahNumber;
+  final PageController _pageController = PageController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -97,60 +100,35 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bookmarks = context.watch<BookmarkService>();
     final isMushafLayout = widget.surahNumber == 17 && _mushafPages.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: QuranyTheme.background,
       appBar: AppBar(
         title: Text('سورة ${widget.surahName}'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
         actions: [
-          // Font family selector (only for Mushaf layout)
           if (isMushafLayout)
             PopupMenuButton<String>(
               icon: const Icon(Icons.font_download_outlined),
               tooltip: 'تغيير الخط',
-              onSelected: (String value) {
-                setState(() {
-                  _selectedFontFamily = value;
-                });
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
-                  value: 'QPCHafs',
-                  child: Text('خط حفص الرسمي (QPC)'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'KFGQPCNastaleeq',
-                  child: Text('خط نستعليق (Nastaleeq)'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'MeQuran',
-                  child: Text('خط مِي المطور (MeQuran)'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'DigitalKhattV1',
-                  child: Text('خط ديجيتال 1 (Digital V1)'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'DigitalKhattV2',
-                  child: Text('خط ديجيتال 2 (Digital V2)'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'DigitalKhattIndoPak',
-                  child: Text('خط ديجيتال إندوباك'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'IndopakNastaleeq',
-                  child: Text('خط نستعليق هندي/باكستاني'),
-                ),
+              onSelected: (value) => setState(() => _selectedFontFamily = value),
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'QPCHafs', child: Text('حفص (QPC)')),
+                PopupMenuItem(
+                    value: 'KFGQPCNastaleeq', child: Text('نستعليق')),
+                PopupMenuItem(value: 'MeQuran', child: Text('MeQuran')),
               ],
             ),
-          // Font size controls
           IconButton(
             icon: const Icon(Icons.text_decrease),
             onPressed: () {
@@ -163,7 +141,6 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               if (_fontSize < 48) setState(() => _fontSize += 2);
             },
           ),
-          // Navigate to recitation
           IconButton(
             icon: const Icon(Icons.mic_rounded),
             tooltip: 'تلاوة هذه السورة',
@@ -177,19 +154,24 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           ),
         ],
       ),
-      body: _isLayoutLoading
+      body: _isLayoutLoading || _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: QuranyTheme.errorRed),
+                      const Icon(Icons.error_outline,
+                          size: 64, color: QuranyTheme.errorRed),
                       const SizedBox(height: 16),
-                      Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+                      Text(_error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 16)),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: widget.surahNumber == 17 ? _loadLayoutData : _loadVerses,
+                        onPressed: widget.surahNumber == 17
+                            ? _loadLayoutData
+                            : _loadVerses,
                         child: const Text('إعادة المحاولة'),
                       ),
                     ],
@@ -202,127 +184,57 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   Widget _buildMushafLayout() {
-    return Column(
-      children: [
-        // Page metadata header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF0D1C0F)
-              : QuranyTheme.lightGreen,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'صفحة ${_mushafPages[_currentPageIndex].pageNumber}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: QuranyTheme.primaryGold,
-                ),
-              ),
-              const Text(
-                'الجزء الخامس عشر',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Horizontal PageView for pages
-        Expanded(
-          child: PageView.builder(
-            itemCount: _mushafPages.length,
-            onPageChanged: (index) {
+    return PageView.builder(
+      controller: _pageController,
+      itemCount: _mushafPages.length,
+      onPageChanged: (index) {
+        setState(() {
+          _currentPageIndex = index;
+          _selectedWordIndex = null;
+          _selectedAyahNumber = null;
+        });
+      },
+      itemBuilder: (context, index) {
+        final page = _mushafPages[index];
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: MushafPageWidget(
+            page: page,
+            surahTitle: 'سورة ${widget.surahName}',
+            fontSize: _fontSize,
+            fontFamily: _selectedFontFamily,
+            selectedWordIndex: _selectedWordIndex,
+            selectedAyahNumber: _selectedAyahNumber,
+            onWordTap: (word) {
               setState(() {
-                _currentPageIndex = index;
-                _selectedWordIndex = null;
-                _selectedAyahNumber = null;
+                _selectedWordIndex = word.indexInPage;
+                _selectedAyahNumber = word.ayahNumber;
               });
-            },
-            itemBuilder: (context, index) {
-              final page = _mushafPages[index];
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: MushafPageWidget(
-                  page: page,
-                  fontSize: _fontSize,
-                  fontFamily: _selectedFontFamily,
-                  selectedWordIndex: _selectedWordIndex,
-                  selectedAyahNumber: _selectedAyahNumber,
-                  onWordTap: (word) {
-                    setState(() {
-                      _selectedWordIndex = word.indexInPage;
-                      _selectedAyahNumber = word.ayahNumber;
-                    });
 
-                    // Reconstruct full Ayah text from page tokens
-                    final ayahText = page.lines
-                        .expand((l) => l.wordTokens)
-                        .where((w) => w.ayahNumber == word.ayahNumber && !w.isAyahMarker)
-                        .map((w) => w.text)
-                        .join(' ');
+              final ayahText = page.lines
+                  .expand((l) => l.wordTokens)
+                  .where((w) =>
+                      w.ayahNumber == word.ayahNumber && !w.isAyahMarker)
+                  .map((w) => w.text)
+                  .join(' ');
 
-                    _showMushafWordOptions(context, word, ayahText);
-                  },
-                ),
-              );
+              _showMushafWordOptions(context, word, ayahText);
             },
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildStandardList(BookmarkService bookmarks) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Surah header banner
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [QuranyTheme.darkGreen, QuranyTheme.primaryGreen],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'سورة ${widget.surahName}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Amiri',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${AppConstants.surahVerseCount[widget.surahNumber - 1]} آية • ${AppConstants.surahRevelationType[widget.surahNumber - 1]}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Bismillah
           if (widget.surahNumber != 9 && widget.surahNumber != 1)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                 style: TextStyle(
@@ -334,8 +246,6 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                 textDirection: TextDirection.rtl,
               ),
             ),
-
-          // Linear Verses List
           ..._verses.map((verse) {
             final isBookmarked = bookmarks.isBookmarked(
               widget.surahNumber,
@@ -413,49 +323,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               ),
             );
           }),
-          const SizedBox(height: 32),
-
-          // Bottom navigation
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (widget.surahNumber < 114)
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.quranReader,
-                      arguments: {
-                        'surahNumber': widget.surahNumber + 1,
-                        'surahName': AppConstants.surahNames[widget.surahNumber],
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: Text(
-                    AppConstants.surahNames[widget.surahNumber],
-                  ),
-                ),
-              if (widget.surahNumber > 1)
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.quranReader,
-                      arguments: {
-                        'surahNumber': widget.surahNumber - 1,
-                        'surahName': AppConstants.surahNames[widget.surahNumber - 2],
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.arrow_forward),
-                  label: Text(
-                    AppConstants.surahNames[widget.surahNumber - 2],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
         ],
       ),
     );

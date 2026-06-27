@@ -6,6 +6,7 @@ import '../../config/constants.dart';
 import '../../config/routes.dart';
 import '../../models/schedule.dart';
 import '../../services/schedule_service.dart';
+import '../../widgets/app_icons.dart';
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
@@ -18,10 +19,7 @@ class ScheduleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('جدول التلاوة'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
         actions: [
           if (schedules.isNotEmpty)
             IconButton(

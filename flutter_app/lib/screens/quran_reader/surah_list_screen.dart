@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
 import '../../config/constants.dart';
+import '../../widgets/app_icons.dart';
 
 class SurahListScreen extends StatefulWidget {
   const SurahListScreen({super.key});
@@ -50,10 +51,7 @@ class _SurahListScreenState extends State<SurahListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_selectForRecitation ? 'اختر السورة' : 'فهرس السور'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
       ),
       body: Column(
         children: [
@@ -130,13 +128,16 @@ class _SurahListScreenState extends State<SurahListScreen> {
                       '$verseCount آية • $revelationType',
                       style: const TextStyle(fontSize: 13),
                     ),
-                    trailing: Icon(
-                      _selectForRecitation
-                          ? Icons.mic_rounded
-                          : Icons.arrow_back_ios,
-                      size: 18,
-                      color: QuranyTheme.primaryGreen,
-                    ),
+                    trailing: _selectForRecitation
+                        ? const Icon(
+                            Icons.mic_rounded,
+                            size: 18,
+                            color: QuranyTheme.primaryGreen,
+                          )
+                        : AppIcons.forwardChevron(
+                            color: QuranyTheme.primaryGreen,
+                            size: 18,
+                          ),
                     onTap: () {
                       if (_selectForRecitation) {
                         Navigator.pushNamed(

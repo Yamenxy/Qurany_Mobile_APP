@@ -1,3 +1,0 @@
-json.chapter do
-  json.partial! partial: 'chapter', locals: {chapter: @presenter.chapter}
-end

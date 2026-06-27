@@ -1,9 +1,4 @@
 class AppConstants {
-  // API Configuration
-  // Change this to your backend server address
-  static const String apiBaseUrl = 'http://192.168.1.20:5000'; // Physical device on same WiFi network
-  // static const String apiBaseUrl = 'http://10.0.2.2:5000'; // Android emulator
-
   // Quran API (public)
   static const String quranApiBaseUrl = 'https://api.alquran.cloud/v1';
 

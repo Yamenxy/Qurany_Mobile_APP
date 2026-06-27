@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
 import '../../services/quran_service.dart';
+import '../../widgets/app_icons.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -48,10 +49,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('البحث في القرآن'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
       ),
       body: Column(
         children: [

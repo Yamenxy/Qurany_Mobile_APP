@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../services/recitation_history_service.dart';
+import '../../widgets/app_icons.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -15,10 +16,7 @@ class ProgressScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('التقدم والإحصائيات'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

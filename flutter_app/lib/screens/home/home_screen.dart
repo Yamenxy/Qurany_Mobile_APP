@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
+import '../../models/verse.dart';
 import '../../services/auth_service.dart';
+import '../../services/quran_service.dart';
 import '../../services/recitation_history_service.dart';
 import '../../services/schedule_service.dart';
+import '../../widgets/app_icons.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,13 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: QuranyTheme.background,
       body: IndexedStack(
         index: _selectedIndex,
-        children: const [
+        children: [
           _DashboardTab(),
-          _QuranTab(),
-          _ReciteTab(),
-          _MoreTab(),
+          const _QuranTab(),
+          const _ReciteTab(),
+          const _MoreTab(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -55,132 +61,107 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ─────────────────── Dashboard Tab ───────────────────
-class _DashboardTab extends StatelessWidget {
+class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
+
+  @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final quran = context.read<QuranService>();
+      if (quran.verseOfTheDay == null && !quran.verseOfTheDayLoading) {
+        quran.loadRandomVerse();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final history = context.watch<RecitationHistoryService>();
     final schedule = context.watch<ScheduleService>();
+    final quran = context.watch<QuranService>();
 
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          // Header
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [QuranyTheme.darkGreen, QuranyTheme.primaryGreen],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'السلام عليكم',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            auth.userName.isNotEmpty ? auth.userName : 'ضيف',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          // Daily streak badge
-                          if (schedule.dailyStreak > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: QuranyTheme.primaryGold.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('🔥', style: TextStyle(fontSize: 16)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${schedule.dailyStreak}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          const SizedBox(width: 10),
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: QuranyTheme.primaryGold,
-                            child: Text(
-                              auth.userName.isNotEmpty
-                                  ? auth.userName[0].toUpperCase()
-                                  : 'ض',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+    return Scaffold(
+      backgroundColor: QuranyTheme.background,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 260,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      QuranyTheme.primary.withValues(alpha: 0.06),
+                      QuranyTheme.background.withValues(alpha: 0),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Quick stats
-                  Row(
-                    children: [
-                      _StatCard(
-                        icon: Icons.auto_stories,
-                        label: 'الجلسات',
-                        value: '${history.totalSessions}',
-                      ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        icon: Icons.grade_rounded,
-                        label: 'المتوسط',
-                        value:
-                            '${history.averageScore.toStringAsFixed(0)}%',
-                      ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        icon: Icons.local_fire_department,
-                        label: 'المتتالية',
-                        value: '${schedule.dailyStreak}',
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _DashboardTopBar(
+                        onMenuTap: () =>
+                            Navigator.pushNamed(context, AppRoutes.settings),
+                        onNotificationsTap: () =>
+                            Navigator.pushNamed(context, AppRoutes.schedule),
+                      ),
+                      _DashboardGreeting(
+                        userName:
+                            auth.userName.isNotEmpty ? auth.userName : 'ضيف',
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                        child: _ContinueReadingCard(
+                          lastSession: history.sessions.isNotEmpty
+                              ? history.sessions.first
+                              : null,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: _VerseOfTheDayCard(
+                          verse: quran.verseOfTheDay,
+                          isLoading: quran.verseOfTheDayLoading,
+                          error: quran.verseOfTheDayError,
+                          surahName: quran.verseOfTheDay != null
+                              ? quran.surahNameFor(
+                                  quran.verseOfTheDay!.surahNumber,
+                                )
+                              : null,
+                          onRetry: () => quran.loadRandomVerse(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: _DashboardStatsRow(
+                      sessions: history.totalSessions,
+                      average: history.averageScore,
+                      streak: schedule.dailyStreak,
+                    ),
+                  ),
+                ),
 
           // Today's Schedule Card
           if (schedule.todaySchedules.isNotEmpty)
@@ -200,6 +181,8 @@ class _DashboardTab extends StatelessWidget {
                 children: [
                   const Text(
                     'الوصول السريع',
+                    textAlign: TextAlign.start,
+                    textDirection: TextDirection.rtl,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -298,6 +281,8 @@ class _DashboardTab extends StatelessWidget {
                     children: [
                       const Text(
                         'النشاط الأخير',
+                        textAlign: TextAlign.start,
+                        textDirection: TextDirection.rtl,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -373,7 +358,7 @@ class _DashboardTab extends StatelessWidget {
                           subtitle: Text(
                             '${session.mistakes} أخطاء • ${_formatDate(session.dateTime)}',
                           ),
-                          trailing: const Icon(Icons.arrow_back_ios, size: 16),
+                          trailing: AppIcons.forwardChevron(size: 16),
                         ),
                       );
                     }),
@@ -382,7 +367,10 @@ class _DashboardTab extends StatelessWidget {
               ),
             ),
           ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,12 +386,345 @@ class _DashboardTab extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+// ─────────────────── Dashboard header widgets ───────────────────
+
+class _DashboardTopBar extends StatelessWidget {
+  final VoidCallback onMenuTap;
+  final VoidCallback onNotificationsTap;
+
+  const _DashboardTopBar({
+    required this.onMenuTap,
+    required this.onNotificationsTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        children: [
+          _HeaderIconButton(
+            icon: Icons.menu_rounded,
+            onTap: onMenuTap,
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/theLogo.png',
+                  height: 28,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.menu_book_rounded,
+                    color: QuranyTheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'قُرآنِي',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: QuranyTheme.primary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _HeaderIconButton(
+            icon: Icons.notifications_none_rounded,
+            onTap: onNotificationsTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardGreeting extends StatelessWidget {
+  final String userName;
+
+  const _DashboardGreeting({required this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'السلام عليكم',
+            textAlign: TextAlign.start,
+            textDirection: TextDirection.rtl,
+            style: TextStyle(
+              fontSize: 14,
+              color: QuranyTheme.sage,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    'بارك الله يومك، $userName',
+                    textAlign: TextAlign.start,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: QuranyTheme.textPrimary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFCEAEA),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFE57373),
+                    size: 22,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _HeaderIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: QuranyTheme.surface.withValues(alpha: 0.7),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, color: QuranyTheme.primary, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContinueReadingCard extends StatelessWidget {
+  final dynamic lastSession;
+
+  const _ContinueReadingCard({this.lastSession});
+
+  static const int _defaultSurah = 18; // Al-Kahf
+
+  @override
+  Widget build(BuildContext context) {
+    final surahNumber = lastSession?.surahNumber ?? _defaultSurah;
+    final surahName = lastSession?.surahName ??
+        AppConstants.surahNames[_defaultSurah - 1];
+    final totalVerses = AppConstants.surahVerseCount[surahNumber - 1];
+    final versesRead = lastSession?.versesRecited ?? (totalVerses * 0.4).round();
+    final progress = (versesRead / totalVerses).clamp(0.0, 1.0);
+    final progressPercent = (progress * 100).round();
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.pushNamed(
+          context,
+          AppRoutes.quranReader,
+          arguments: {
+            'surahNumber': surahNumber,
+            'surahName': surahName,
+          },
+        ),
+        borderRadius: BorderRadius.circular(QuranyTheme.cardRadius),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: QuranyTheme.primary,
+            borderRadius: BorderRadius.circular(QuranyTheme.cardRadius),
+            boxShadow: const [
+              BoxShadow(
+                color: QuranyTheme.shadow,
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.menu_book_rounded,
+                          color: Colors.white.withValues(alpha: 0.95),
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'تابع القراءة',
+                              textAlign: TextAlign.start,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'سورة $surahName',
+                              textAlign: TextAlign.start,
+                              textDirection: TextDirection.rtl,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$surahNumber:1 — $surahNumber:$totalVerses',
+                              textAlign: TextAlign.start,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
+                        ),
+                        child: AppIcons.actionForward(
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      valueColor:
+                          const AlwaysStoppedAnimation(QuranyTheme.progress),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$progressPercent%',
+                    textAlign: TextAlign.start,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardStatsRow extends StatelessWidget {
+  final int sessions;
+  final double average;
+  final int streak;
+
+  const _DashboardStatsRow({
+    required this.sessions,
+    required this.average,
+    required this.streak,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _StatPill(
+          icon: Icons.auto_stories_outlined,
+          label: 'الجلسات',
+          value: '$sessions',
+        ),
+        const SizedBox(width: 10),
+        _StatPill(
+          icon: Icons.grade_outlined,
+          label: 'المتوسط',
+          value: '${average.toStringAsFixed(0)}%',
+        ),
+        const SizedBox(width: 10),
+        _StatPill(
+          icon: Icons.local_fire_department_outlined,
+          label: 'المتتالية',
+          value: '$streak',
+        ),
+      ],
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
 
-  const _StatCard({
+  const _StatPill({
     required this.icon,
     required this.label,
     required this.value,
@@ -413,30 +734,264 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          color: QuranyTheme.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: QuranyTheme.border),
+          boxShadow: const [
+            BoxShadow(
+              color: QuranyTheme.shadow,
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: QuranyTheme.primaryGold, size: 24),
-            const SizedBox(height: 4),
+            Icon(icon, color: QuranyTheme.primary, size: 20),
+            const SizedBox(height: 6),
             Text(
               value,
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
+                color: QuranyTheme.textPrimary,
               ),
             ),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 12,
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
+              style: const TextStyle(
+                fontSize: 11,
+                color: QuranyTheme.textMuted,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VerseOfTheDayCard extends StatelessWidget {
+  final Verse? verse;
+  final bool isLoading;
+  final String? error;
+  final String? surahName;
+  final VoidCallback onRetry;
+
+  const _VerseOfTheDayCard({
+    required this.verse,
+    required this.isLoading,
+    required this.error,
+    required this.surahName,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: QuranyTheme.surfaceSoft,
+        borderRadius: BorderRadius.circular(QuranyTheme.cardRadius),
+        border: Border.all(color: QuranyTheme.border),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: QuranyTheme.accent.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.wb_sunny_outlined,
+                    color: QuranyTheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'آية اليوم',
+                  textAlign: TextAlign.start,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: QuranyTheme.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                if (verse != null && surahName != null)
+                  Text(
+                    '$surahName ${verse!.surahNumber}:${verse!.verseNumber}',
+                    textAlign: TextAlign.start,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: QuranyTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: QuranyTheme.primary,
+                    ),
+                  ),
+                ),
+              )
+            else if (error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      error!,
+                      textAlign: TextAlign.start,
+                      textDirection: TextDirection.rtl,
+                      style: const TextStyle(color: QuranyTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        onPressed: onRetry,
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (verse != null && verse!.text.isNotEmpty)
+              Text(
+                verse!.text,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: 24,
+                      height: 2.0,
+                      color: QuranyTheme.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                textAlign: TextAlign.start,
+                textDirection: TextDirection.rtl,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    onPressed: onRetry,
+                    child: const Text('تحميل آية اليوم'),
+                  ),
+                ),
+              ),
+            if (!isLoading && verse != null) ...[
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Material(
+                    color: QuranyTheme.surface,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        final reference =
+                            '$surahName ${verse!.surahNumber}:${verse!.verseNumber}';
+                        Clipboard.setData(
+                          ClipboardData(text: '${verse!.text}\n— $reference'),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('تم نسخ الآية'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.share_outlined,
+                          color: QuranyTheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Material(
+                    color: QuranyTheme.accent.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.quranReader,
+                        arguments: {
+                          'surahNumber': verse!.surahNumber,
+                          'surahName': surahName,
+                        },
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Text.rich(
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.start,
+                          TextSpan(
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: QuranyTheme.textPrimary,
+                              height: 1.2,
+                            ),
+                            children: [
+                              const TextSpan(text: 'عرض الكل'),
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsetsDirectional.only(
+                                    start: 4,
+                                  ),
+                                  child: AppIcons.forwardChevron(
+                                    size: 14,
+                                    color: QuranyTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -478,6 +1033,8 @@ class _ActionCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   title,
+                  textAlign: TextAlign.start,
+                  textDirection: TextDirection.rtl,
                   style: TextStyle(
                     color: color,
                     fontSize: 14,
@@ -490,6 +1047,8 @@ class _ActionCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   subtitle,
+                  textAlign: TextAlign.start,
+                  textDirection: TextDirection.rtl,
                   style: TextStyle(
                     color: color.withValues(alpha: 0.7),
                     fontSize: 11,
@@ -770,7 +1329,7 @@ class _RecitationModeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_back_ios, color: color, size: 18),
+              AppIcons.forwardChevron(color: color, size: 18),
             ],
           ),
         ),
@@ -889,7 +1448,7 @@ class _MoreItem extends StatelessWidget {
         child: Icon(icon, color: c),
       ),
       title: Text(title, style: TextStyle(color: c)),
-      trailing: Icon(Icons.arrow_back_ios, size: 16, color: c),
+      trailing: AppIcons.forwardChevron(size: 16, color: c),
       onTap: onTap,
     );
   }

@@ -3,35 +3,10 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../config/constants.dart';
 import '../../services/auth_service.dart';
-import '../../services/api_service.dart';
+import '../../widgets/app_icons.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _backendAvailable = false;
-  bool _checkingBackend = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkBackend();
-  }
-
-  Future<void> _checkBackend() async {
-    setState(() => _checkingBackend = true);
-    final available = await ApiService().checkHealth();
-    if (mounted) {
-      setState(() {
-        _backendAvailable = available;
-        _checkingBackend = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +15,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الإعدادات'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: AppIcons.backButton(context: context),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -97,53 +69,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Backend status
-          const _SectionHeader(title: 'حالة الخادم'),
-          Card(
-            child: ListTile(
-              leading: Icon(
-                _checkingBackend
-                    ? Icons.hourglass_top
-                    : _backendAvailable
-                        ? Icons.cloud_done
-                        : Icons.cloud_off,
-                color: _checkingBackend
-                    ? Colors.grey
-                    : _backendAvailable
-                        ? QuranyTheme.correctGreen
-                        : QuranyTheme.errorRed,
-              ),
-              title: Text(
-                _checkingBackend
-                    ? 'جاري التحقق...'
-                    : _backendAvailable
-                        ? 'الخادم متصل'
-                        : 'الخادم غير متوفر',
-              ),
-              subtitle: Text(
-                'الخادم: ${AppConstants.apiBaseUrl}',
-                style: const TextStyle(fontSize: 12),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _checkBackend,
-              ),
-            ),
-          ),
-          if (!_backendAvailable && !_checkingBackend)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Text(
-                'لاستخدام ميزة تحليل التلاوة بالذكاء الاصطناعي، شغّل الخادم الخلفي (backend/app.py)',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 20),
-
           // App info
           const _SectionHeader(title: 'عن التطبيق'),
           Card(
@@ -161,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: QuranyTheme.primaryGreen),
                   title: const Text('وصف'),
                   subtitle: const Text(
-                    'تطبيق قُرآنِي يستخدم الذكاء الاصطناعي لتقييم تلاوة القرآن الكريم وكشف الأخطاء في الوقت الفعلي.',
+                    'تطبيق قُرآنِي لتقييم تلاوة القرآن الكريم وكشف الأخطاء في الوقت الفعلي.',
                   ),
                   isThreeLine: true,
                   onTap: () {},
