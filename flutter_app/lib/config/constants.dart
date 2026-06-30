@@ -7,6 +7,7 @@ class AppConstants {
   //   - Android emulator -> http://10.0.2.2:8000 (maps to host localhost)
   //   - iOS simulator / web / desktop -> http://localhost:8000
   //   - Real device -> http://<your-PC-LAN-IP>:8000
+  //     (add that IP to android/app/src/debug/res/xml/network_security_config.xml)
   static const String recitationApiBaseUrl = String.fromEnvironment(
     'QURANY_API_BASE',
     defaultValue: 'http://10.0.2.2:8000',
