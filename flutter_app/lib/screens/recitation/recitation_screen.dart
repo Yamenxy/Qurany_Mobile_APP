@@ -14,6 +14,7 @@ import '../../models/verse.dart';
 import '../../models/recitation_session.dart';
 import '../../services/audio_service.dart';
 import '../../services/quran_service.dart';
+import '../../services/recitation_api_service.dart';
 import '../../services/recitation_history_service.dart';
 import '../../services/schedule_service.dart';
 import '../../widgets/app_icons.dart';
@@ -49,6 +50,10 @@ class _RecitationScreenState extends State<RecitationScreen>
   bool _isProcessing = false;
   bool _showReference = true;
   String _statusText = 'اضغط على الزر للبدء بالتسجيل';
+
+  // Captured WAV path for server-side analysis (best-effort, runs alongside
+  // on-device speech recognition; may be null if capture was unavailable).
+  String? _recordedAudioPath;
 
   // Surah data
   List<Verse> _verses = [];
@@ -148,6 +153,11 @@ class _RecitationScreenState extends State<RecitationScreen>
   }
 
   bool get _isVerseMode => widget.mode == 'tahfeez' || widget.mode == 'tasmee3';
+
+  /// Whole-surah modes for a backend-supported surah can use server analysis.
+  bool get _serverAnalysisEligible =>
+      (widget.mode == 'free' || widget.mode == 'memorization') &&
+      AppConstants.serverSupportedSurahs.contains(_selectedSurah);
 
   /// Start the speech listening session
   void _startSpeechListening() {
@@ -264,6 +274,29 @@ class _RecitationScreenState extends State<RecitationScreen>
 
     // Use on-device speech recognition for live transcription
     _usingSpeechRecognition = false;
+
+    // Capture raw audio in parallel for server-side (faster-whisper) analysis.
+    // Best-effort: on platforms where the speech recognizer holds the mic
+    // exclusively this may fail, in which case we silently fall back to the
+    // on-device transcript/comparison.
+    _recordedAudioPath = null;
+    if (_serverAnalysisEligible) {
+      try {
+        final started = await _audioService.startRecording();
+        if (started) {
+          _amplitudeSubscription?.cancel();
+          _amplitudeSubscription =
+              _audioService.amplitudeStream.listen((amp) {
+            if (!mounted) return;
+            setState(() {
+              _amplitudes = [..._amplitudes.skip(1), amp];
+            });
+          });
+        }
+      } catch (e) {
+        debugPrint('Parallel audio capture unavailable: $e');
+      }
+    }
 
     if (_speechAvailable) {
       _startSpeechListening();
@@ -568,6 +601,12 @@ class _RecitationScreenState extends State<RecitationScreen>
 
     WakelockPlus.disable();
 
+    // Stop the parallel WAV capture (if it was running).
+    try {
+      final stopped = await _audioService.stopRecording();
+      if (stopped != null) _recordedAudioPath = stopped;
+    } catch (_) {}
+
     if (widget.mode == 'tasmee3') {
       if (mounted) {
         setState(() {
@@ -585,6 +624,22 @@ class _RecitationScreenState extends State<RecitationScreen>
         _validateTahfeez();
       }
       return;
+    }
+
+    // Prefer server-side analysis (faster-whisper) when a recording was
+    // captured and the surah is supported; otherwise fall back to the
+    // on-device speech-recognition comparison.
+    if (_serverAnalysisEligible && _recordedAudioPath != null && mounted) {
+      final api = context.read<RecitationApiService>();
+      setState(() => _statusText = 'يتم تحليل التلاوة على الخادم...');
+      final serverResult = await api.tryAnalyzeRecitation(
+        audioFilePath: _recordedAudioPath!,
+        surahNumber: _selectedSurah,
+      );
+      if (serverResult != null && mounted) {
+        _saveAndNavigateToResult(serverResult);
+        return;
+      }
     }
 
     // Use on-device speech recognition for comparison

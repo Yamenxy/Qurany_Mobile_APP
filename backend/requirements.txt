@@ -1,0 +1,18 @@
+# Web framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Configuration / validation
+pydantic
+pydantic-settings
+
+# Speech-to-text (local, free) - real-time Quranic Arabic transcription
+faster-whisper
+
+# HTTP client (reference-text fallback fetch)
+httpx
+
+# Testing
+pytest
+pytest-asyncio

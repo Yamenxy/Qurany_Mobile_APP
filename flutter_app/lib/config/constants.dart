@@ -2,6 +2,19 @@ class AppConstants {
   // Quran API (public)
   static const String quranApiBaseUrl = 'https://api.alquran.cloud/v1';
 
+  // Recitation analysis backend (FastAPI + faster-whisper).
+  // Override at build time: --dart-define=QURANY_API_BASE=http://<host>:8000
+  //   - Android emulator -> http://10.0.2.2:8000 (maps to host localhost)
+  //   - iOS simulator / web / desktop -> http://localhost:8000
+  //   - Real device -> http://<your-PC-LAN-IP>:8000
+  static const String recitationApiBaseUrl = String.fromEnvironment(
+    'QURANY_API_BASE',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
+
+  // Surahs supported by the recitation backend (MVP scope).
+  static const List<int> serverSupportedSurahs = [78];
+
   // Audio settings
   static const int audioSampleRate = 16000;
   static const int audioChunkDurationMs = 500;

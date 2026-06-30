@@ -10,6 +10,7 @@ import 'services/auth_service.dart';
 import 'services/quran_service.dart';
 import 'services/bookmark_service.dart';
 import 'services/recitation_history_service.dart';
+import 'services/recitation_api_service.dart';
 import 'services/schedule_service.dart';
 import 'services/notification_service.dart';
 
@@ -44,6 +45,10 @@ class QuranyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookmarkService(prefs)),
         ChangeNotifierProvider(create: (_) => RecitationHistoryService(prefs)),
         ChangeNotifierProvider(create: (_) => ScheduleService(prefs)),
+        Provider(
+          create: (_) => RecitationApiService(),
+          dispose: (_, service) => service.dispose(),
+        ),
       ],
       child: MaterialApp(
         title: 'Qurany',

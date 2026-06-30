@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      # Build context is the backend/ root (one level up from this file).
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      WHISPER_MODEL: small
+      WHISPER_COMPUTE_TYPE: int8
+      WHISPER_DEVICE: cpu
+    volumes:
+      # Persist uploads + the Whisper model cache across restarts.
+      - ../data:/app/data
+      - whisper-cache:/root/.cache/huggingface
+
+volumes:
+  whisper-cache:

@@ -20,9 +20,11 @@ yarn-error.log*
 
 # ── Legacy / removed app stacks ───────────────────────────
 Frontend/
-backend/
 quranic-universal-library/
 quranic-universal-library-main/
+
+# ── Build outputs / distributables ────────────────────────
+dist/
 
 # ── External / sibling projects (not part of this repo) ───
 Tarteel-AI-Model/
