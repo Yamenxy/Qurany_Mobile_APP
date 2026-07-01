@@ -5,6 +5,7 @@ import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/quran_reader/surah_list_screen.dart';
 import '../screens/quran_reader/quran_reader_screen.dart';
+import '../screens/mushaf_reader/mushaf_reader_screen.dart';
 import '../screens/recitation/recitation_screen.dart';
 import '../screens/recitation/recitation_result_screen.dart';
 import '../screens/schedule/schedule_screen.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String surahList = '/surah-list';
   static const String quranReader = '/quran-reader';
+  static const String mushafReader = '/mushaf-reader';
   static const String recitation = '/recitation';
   static const String recitationResult = '/recitation-result';
   static const String schedule = '/schedule';
@@ -48,6 +50,15 @@ class AppRoutes {
           QuranReaderScreen(
             surahNumber: args?['surahNumber'] ?? 1,
             surahName: args?['surahName'] ?? 'الفاتحة',
+          ),
+          settings,
+        );
+      case mushafReader:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return _slideRoute(
+          MushafReaderScreen(
+            initialPage: args?['initialPage'] as int?,
+            surahNumber: args?['surahNumber'] as int?,
           ),
           settings,
         );
