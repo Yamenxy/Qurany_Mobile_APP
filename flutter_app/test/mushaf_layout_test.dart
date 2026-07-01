@@ -2,71 +2,157 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qurany_app/models/mushaf_layout.dart';
 
 void main() {
-  group('MushafLayout Parsing Tests', () {
-    test('Should parse page and lines correctly', () {
-      final jsonMap = {
-        'page_number': 282,
-        'lines': [
+  group('MushafPage.fromQuranApiJson', () {
+    // Simulates the shape returned by
+    // GET /verses/by_page/282?words=true&word_fields=text_uthmani,line_number,char_type_name,position&mushaf=2
+    // for the start of Surah Al-Isra (17), whose first ayah line is line 3.
+    final israFixture = {
+      'verses': [
+        {
+          'verse_key': '17:1',
+          'verse_number': 1,
+          'words': [
+            {
+              'id': 1,
+              'text_uthmani': 'سُبْحَانَ',
+              'line_number': 3,
+              'char_type_name': 'word',
+              'position': 1,
+            },
+            {
+              'id': 2,
+              'text_uthmani': 'الَّذِي',
+              'line_number': 3,
+              'char_type_name': 'word',
+              'position': 2,
+            },
+            {
+              'id': 3,
+              'text_uthmani': '١',
+              'line_number': 3,
+              'char_type_name': 'end',
+              'position': 3,
+            },
+          ],
+        },
+        {
+          'verse_key': '17:2',
+          'verse_number': 2,
+          'words': [
+            {
+              'id': 4,
+              'text_uthmani': 'وَآتَيْنَا',
+              'line_number': 3,
+              'char_type_name': 'word',
+              'position': 1,
+            },
+            {
+              'id': 5,
+              'text_uthmani': 'مُوسَى',
+              'line_number': 4,
+              'char_type_name': 'word',
+              'position': 2,
+            },
+          ],
+        },
+      ],
+    };
+
+    test('synthesizes surah-name and basmallah lines before the first ayah',
+        () {
+      final page = MushafPage.fromQuranApiJson(282, israFixture);
+
+      final surahNameLine = page.lines.firstWhere((l) => l.isSurahName);
+      final basmallahLine = page.lines.firstWhere((l) => l.isBasmallah);
+
+      expect(surahNameLine.lineNumber, 1);
+      expect(surahNameLine.surahNumber, 17);
+      expect(basmallahLine.lineNumber, 2);
+    });
+
+    test('groups consecutive same-ayah words within a line', () {
+      final page = MushafPage.fromQuranApiJson(282, israFixture);
+      final line3 = page.lines.firstWhere((l) => l.lineNumber == 3);
+
+      expect(line3.isAyah, true);
+      expect(line3.ayahGroups.length, 2);
+
+      expect(line3.ayahGroups[0].verseKey, '17:1');
+      expect(line3.ayahGroups[0].words.length, 3);
+      expect(line3.ayahGroups[0].words.last.isAyahMarker, true);
+
+      expect(line3.ayahGroups[1].verseKey, '17:2');
+      expect(line3.ayahGroups[1].words.length, 1);
+      expect(line3.ayahGroups[1].words.first.text, 'وَآتَيْنَا');
+    });
+
+    test('splits an ayah spanning multiple lines correctly', () {
+      final page = MushafPage.fromQuranApiJson(282, israFixture);
+      final line4 = page.lines.firstWhere((l) => l.lineNumber == 4);
+
+      expect(line4.isAyah, true);
+      expect(line4.ayahGroups.length, 1);
+      expect(line4.ayahGroups.single.verseKey, '17:2');
+      expect(line4.ayahGroups.single.words.single.text, 'مُوسَى');
+    });
+
+    test('skips basmallah synthesis for Al-Fatihah', () {
+      final fatihaFixture = {
+        'verses': [
           {
-            'line_number': 1,
-            'type': 'surah_name',
-            'centered': true,
-            'text': 'surah017'
+            'verse_key': '1:1',
+            'verse_number': 1,
+            'words': [
+              {
+                'id': 1,
+                'text_uthmani': 'بِسْمِ',
+                'line_number': 2,
+                'char_type_name': 'word',
+                'position': 1,
+              },
+            ],
           },
-          {
-            'line_number': 2,
-            'type': 'basmallah',
-            'centered': true,
-            'text': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
-          },
-          {
-            'line_number': 3,
-            'type': 'ayah',
-            'centered': false,
-            'text': 'سُبْحَانَ الَّذِي أَسْرَىٰ بِعَبْدِهِ لَيْلًا'
-          },
-          {
-            'line_number': 4,
-            'type': 'ayah',
-            'centered': false,
-            'text': 'مِنَ الْمَسْجِدِ ۝١ وَآتَيْنَا مُوسَى'
-          }
-        ]
+        ],
       };
 
-      final page = MushafPage.fromJson(jsonMap);
+      final page = MushafPage.fromQuranApiJson(1, fatihaFixture);
 
-      expect(page.pageNumber, 282);
-      expect(page.lines.length, 4);
+      expect(page.lines.where((l) => l.isBasmallah), isEmpty);
+      expect(page.lines.firstWhere((l) => l.isSurahName).lineNumber, 1);
+      expect(page.lines.firstWhere((l) => l.isSurahName).surahNumber, 1);
+    });
 
-      // Verify line types
-      expect(page.lines[0].isSurahName, true);
-      expect(page.lines[1].isBasmallah, true);
-      expect(page.lines[2].isAyah, true);
+    test('skips basmallah synthesis for At-Tawbah', () {
+      final tawbahFixture = {
+        'verses': [
+          {
+            'verse_key': '9:1',
+            'verse_number': 1,
+            'words': [
+              {
+                'id': 1,
+                'text_uthmani': 'بَرَاءَةٌ',
+                'line_number': 2,
+                'char_type_name': 'word',
+                'position': 1,
+              },
+            ],
+          },
+        ],
+      };
 
-      // Verify word token counting and index sequencing
-      expect(page.lines[2].wordTokens.length, 5); // سُبْحَانَ الَّذِي أَسْرَىٰ بِعَبْدِهِ لَيْلًا
-      expect(page.lines[3].wordTokens.length, 5); // مِنَ الْمَسْجِدِ ۝١ وَآتَيْنَا مُوسَى
+      final page = MushafPage.fromQuranApiJson(187, tawbahFixture);
 
-      // Verify Ayah assignment
-      // Line 3 words are before ۝١, so they should be Ayah 1
-      expect(page.lines[2].wordTokens[0].ayahNumber, 1);
-      expect(page.lines[2].wordTokens[0].text, 'سُبْحَانَ');
-      expect(page.lines[2].wordTokens[0].indexInPage, 0);
+      expect(page.lines.where((l) => l.isBasmallah), isEmpty);
+      expect(page.lines.firstWhere((l) => l.isSurahName).surahNumber, 9);
+    });
 
-      // Line 4 has ۝١ marker and subsequent words
-      expect(page.lines[3].wordTokens[0].text, 'مِنَ');
-      expect(page.lines[3].wordTokens[0].ayahNumber, 1);
-      expect(page.lines[3].wordTokens[0].indexInPage, 5);
+    test('leaves lines with no data blank', () {
+      final page = MushafPage.fromQuranApiJson(282, israFixture);
+      final lineNumbers = page.lines.map((l) => l.lineNumber).toSet();
 
-      expect(page.lines[3].wordTokens[2].text, '۝١');
-      expect(page.lines[3].wordTokens[2].isAyahMarker, true);
-      expect(page.lines[3].wordTokens[2].ayahNumber, 1);
-
-      // Subsequent words after ۝١ should belong to Ayah 2
-      expect(page.lines[3].wordTokens[3].text, 'وَآتَيْنَا');
-      expect(page.lines[3].wordTokens[3].ayahNumber, 2);
-      expect(page.lines[3].wordTokens[3].indexInPage, 8);
+      // Only lines 1-4 have data in this fixture; 5-15 should be absent.
+      expect(lineNumbers, {1, 2, 3, 4});
     });
   });
 }
