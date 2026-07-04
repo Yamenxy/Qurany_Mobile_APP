@@ -15,7 +15,8 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="false">127.0.0.1</domain>
         <domain includeSubdomains="false">10.0.2.2</domain>
-        <!-- Example LAN IP used for local backend testing; adjust as needed -->
-        <domain includeSubdomains="false">192.168.1.25</domain>
+        <!-- LAN IP of dev machine running the FastAPI backend -->
+        <domain includeSubdomains="false">172.31.78.29</domain>
+        <domain includeSubdomains="false">192.168.1.110</domain>
     </domain-config>
 </network-security-config>

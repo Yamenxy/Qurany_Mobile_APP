@@ -21,6 +21,9 @@ import '../../services/recitation_api_service.dart';
 import '../../services/recitation_history_service.dart';
 import '../../services/schedule_service.dart';
 import '../../services/learning_plan_service.dart';
+import '../../utils/recitation_modes.dart';
+import '../../utils/recitation_result_mapper.dart';
+import '../../utils/user_facing_error.dart';
 import '../../widgets/app_icons.dart';
 class RecitationScreen extends StatefulWidget {
   final int? surahNumber;
@@ -155,7 +158,9 @@ class _RecitationScreenState extends State<RecitationScreen>
         ? widget.surahName!
         : AppConstants.surahNames[_selectedSurah < 1 ? 0 : _selectedSurah - 1];
     _qiraat = widget.qiraat ?? 'حفص';
-    _showReference = widget.mode == 'free' || widget.mode == 'tahfeez';
+    _showReference = widget.mode == 'free' ||
+        widget.mode == 'tahfeez' ||
+        RecitationModes.isAiAnalysisMode(widget.mode);
     _verseTextVisible = widget.mode != 'tasmee3';
 
     _pulseController = AnimationController(
@@ -282,6 +287,8 @@ class _RecitationScreenState extends State<RecitationScreen>
   }
 
   bool get _isVerseMode => widget.mode == 'tahfeez' || widget.mode == 'tasmee3';
+
+  bool get _isAiAnalysisMode => RecitationModes.isAiAnalysisMode(widget.mode);
 
   /// Whole-surah modes for a backend-supported surah can use server analysis.
   bool get _serverAnalysisEligible {
@@ -692,10 +699,37 @@ class _RecitationScreenState extends State<RecitationScreen>
         _matchedWords = refWordsForUi
             .map((w) => _WordMatch(word: w, status: _MatchStatus.pending))
             .toList();
-        _statusText = 'جاري التسجيل... اقرأ الآن';
+        _statusText = _isAiAnalysisMode
+            ? 'سجّل تلاوتك ثم اضغط إيقاف للتحليل بالذكاء الاصطناعي'
+            : 'جاري التسجيل... اقرأ الآن';
       });
 
       _silenceTimer?.cancel();
+      if (_isAiAnalysisMode) {
+        final hasMic = await _audioService.requestPermission();
+        if (!hasMic) {
+          await _abortRecordingTurn('يلزم إذن الميكروفون للتسجيل');
+          return;
+        }
+        try {
+          final started = await _audioService.startRecording();
+          if (started) {
+            _usingHardwareMic = true;
+            _attachMicAmplitudeListener();
+          }
+        } catch (e) {
+          debugPrint('Audio capture unavailable: $e');
+        }
+        _durationSubscription?.cancel();
+        _durationSubscription = Stream.periodic(
+          const Duration(seconds: 1),
+          (i) => i + 1,
+        ).listen((dur) {
+          if (mounted) setState(() => _recordingSeconds = dur);
+        });
+        return;
+      }
+
       if (_isVerseMode) {
         _silenceTimer = Timer(const Duration(seconds: 18), () async {
           if (!mounted || !_isRecording) return;
@@ -1133,6 +1167,11 @@ class _RecitationScreenState extends State<RecitationScreen>
       } catch (_) {}
     }
 
+    if (_isAiAnalysisMode) {
+      await _runAiServerAnalysis();
+      return;
+    }
+
     if (widget.mode == 'tasmee3') {
       await _finishTasmee3Turn();
       return;
@@ -1157,7 +1196,11 @@ class _RecitationScreenState extends State<RecitationScreen>
         riwayah: _riwayah,
       );
       if (serverResult != null && mounted) {
-        _saveAndNavigateToResult(serverResult);
+        _saveAndNavigateToResult(
+          serverResult,
+          fromBackend: true,
+          riwayah: _riwayah,
+        );
         return;
       }
     }
@@ -1639,36 +1682,131 @@ class _RecitationScreenState extends State<RecitationScreen>
     _saveAndNavigateToResult(result);
   }
 
-  void _saveAndNavigateToResult(Map<String, dynamic> result) {
-    final harakatScoreRaw = result['harakatScore'] ?? result['harakat_score'];
-    final harakatMistakesRaw =
-        result['harakatMistakes'] ?? result['harakat_mistakes'];
-    final harakatCheckedRaw =
-        result['harakatChecked'] ?? result['harakat_checked'];
+  Future<void> _runAiServerAnalysis() async {
+    if (_recordedAudioPath == null) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusText = 'لم يتم حفظ التسجيل الصوتي. حاول مرة أخرى.';
+        });
+      }
+      return;
+    }
 
-    final session = RecitationSession(
-      id: const Uuid().v4(),
-      surahNumber: _selectedSurah,
-      surahName: _selectedSurahName,
-      mode: widget.mode,
-      dateTime: DateTime.now(),
-      similarityScore: (result['similarity_score'] ?? 0).toDouble(),
-      totalWords: result['total_words'] ?? 0,
-      matchedWords: result['matched_words'] ?? 0,
-      mistakes: result['mistakes'] ?? 0,
-      versesRecited: _verses.length,
-      transcribedText: result['transcribed_text'],
-      referenceText: result['reference_text'],
-      errors: (result['errors'] as List?)
-              ?.map((e) => RecitationError.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      harakatScore: harakatScoreRaw == null
-          ? null
-          : (harakatScoreRaw as num).toDouble(),
-      harakatMistakes: (harakatMistakesRaw as num?)?.toInt() ?? 0,
-      harakatChecked: (harakatCheckedRaw as num?)?.toInt() ?? 0,
-    );
+    final api = context.read<RecitationApiService>();
+    if (!api.supportsSurah(_selectedSurah)) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusText =
+              'التحليل بالذكاء الاصطناعي متاح لسورتي النبأ والبقرة فقط.';
+        });
+      }
+      return;
+    }
+
+    final healthy = await api.isHealthy();
+    if (!healthy) {
+      final msg = UserFacingError.networkUnavailable;
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusText = msg;
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+      }
+      return;
+    }
+
+    final riwayah = context.read<QiraatService>().riwayah;
+    if (riwayah == 'bazzi' && _selectedSurah != 2) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusText = 'قراءة البزي متاحة لسورة البقرة فقط.';
+        });
+      }
+      return;
+    }
+
+    try {
+      if (mounted) {
+        setState(() => _statusText = 'جاري التحليل بالذكاء الاصطناعي...');
+      }
+      final result = await api.analyzeRecitation(
+        audioFilePath: _recordedAudioPath!,
+        surahNumber: _selectedSurah,
+        riwayah: riwayah,
+        startAyah: widget.startAyah,
+        endAyah: widget.endAyah,
+        autoDetectAyahRange: widget.startAyah == null,
+      );
+      if (mounted) {
+        _saveAndNavigateToResult(result, fromBackend: true, riwayah: riwayah);
+      }
+    } on RecitationApiException catch (e) {
+      final msg =
+          UserFacingError.fromRecitationFailure(statusCode: e.statusCode);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusText = msg;
+        });
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+      }
+    }
+  }
+
+  void _saveAndNavigateToResult(
+    Map<String, dynamic> result, {
+    bool fromBackend = false,
+    String? riwayah,
+  }) {
+    final session = fromBackend
+        ? recitationSessionFromAnalysisResult(
+            result: result,
+            id: const Uuid().v4(),
+            surahNumber: _selectedSurah,
+            surahName: _selectedSurahName,
+            mode: widget.mode,
+            versesRecited: _verses.length,
+            riwayah: riwayah,
+          )
+        : RecitationSession(
+            id: const Uuid().v4(),
+            surahNumber: _selectedSurah,
+            surahName: _selectedSurahName,
+            mode: widget.mode,
+            dateTime: DateTime.now(),
+            similarityScore: (result['similarity_score'] ?? 0).toDouble(),
+            totalWords: result['total_words'] ?? 0,
+            matchedWords: result['matched_words'] ?? 0,
+            mistakes: result['mistakes'] ?? 0,
+            versesRecited: _verses.length,
+            transcribedText: result['transcribed_text'],
+            referenceText: result['reference_text'],
+            errors: (result['errors'] as List?)
+                    ?.map((e) =>
+                        RecitationError.fromJson(e as Map<String, dynamic>))
+                    .toList() ??
+                [],
+            harakatScore: () {
+              final raw = result['harakatScore'] ?? result['harakat_score'];
+              if (raw == null) return null;
+              return (raw as num).toDouble();
+            }(),
+            harakatMistakes:
+                (result['harakatMistakes'] ?? result['harakat_mistakes'] as num?)
+                    ?.toInt() ??
+                0,
+            harakatChecked:
+                (result['harakatChecked'] ?? result['harakat_checked'] as num?)
+                    ?.toInt() ??
+                0,
+            riwayah: context.read<QiraatService>().riwayah,
+          );
 
     // Save to history
     context.read<RecitationHistoryService>().addSession(session);
@@ -1702,7 +1840,9 @@ class _RecitationScreenState extends State<RecitationScreen>
         title: Text(
           widget.planDayNumber != null
               ? 'متابعة الخطة'
-              : widget.mode == 'tahfeez'
+              : RecitationModes.isAiAnalysisMode(widget.mode)
+                  ? 'تحليل بالذكاء الاصطناعي'
+                  : widget.mode == 'tahfeez'
                   ? 'تعلم حر'
                   : widget.mode == 'tasmee3'
                       ? 'تسميع'

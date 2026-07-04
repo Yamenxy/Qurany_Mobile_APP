@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../utils/recitation_modes.dart';
 import '../../models/recitation_session.dart';
 import '../../widgets/app_icons.dart';
 
@@ -761,9 +762,44 @@ class _RecitationResultScreenState extends State<RecitationResultScreen>
               ],
             ),
           ],
+          if (session.tajweedNotes.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ملاحظات التجويد',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: QuranyTheme.darkGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...session.tajweedNotes.map(
+                    (n) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        '• ${n.message}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
-
-          // Accuracy chart
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -908,15 +944,43 @@ class _RecitationResultScreenState extends State<RecitationResultScreen>
             child: Row(
               children: [
                 Icon(
-                  session.mode == 'memorization' ? Icons.psychology : Icons.mic,
+                  session.mode == RecitationModes.aiAnalysis
+                      ? Icons.smart_toy_rounded
+                      : session.mode == RecitationModes.liveMemorization
+                          ? Icons.psychology
+                          : Icons.mic,
                   color: QuranyTheme.primaryGold,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  session.mode == 'memorization' ? 'وضع مراجعة الحفظ' : 'وضع التلاوة الحرة',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: QuranyTheme.primaryGold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        session.mode == RecitationModes.aiAnalysis
+                            ? 'تحليل بالذكاء الاصطناعي'
+                            : session.mode == RecitationModes.liveMemorization
+                                ? 'وضع مراجعة الحفظ'
+                                : 'تلاوة حية (تصحيح على الجهاز)',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: QuranyTheme.primaryGold,
+                        ),
+                      ),
+                      if (session.riwayah != null &&
+                          session.mode == RecitationModes.aiAnalysis) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          session.riwayah == 'bazzi'
+                              ? 'قراءة البزي عن ابن كثير'
+                              : 'قراءة حفص عن عاصم',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],

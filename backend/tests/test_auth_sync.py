@@ -95,3 +95,34 @@ def test_login_rejects_wrong_password(client: TestClient) -> None:
 def test_sync_routes_removed(client: TestClient) -> None:
     assert client.post("/api/v1/sync/push", json={}).status_code == 404
     assert client.get("/api/v1/sync/pull").status_code == 404
+
+
+def test_register_rejects_invalid_email(client: TestClient) -> None:
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "not-an-email", "password": "secret12", "full_name": "Test"},
+    )
+    assert resp.status_code == 422
+    assert "detail" in resp.json()
+
+
+def test_register_rejects_short_password(client: TestClient) -> None:
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "short@qurany.app", "password": "123", "full_name": "Test"},
+    )
+    assert resp.status_code == 422
+
+
+def test_register_rejects_empty_name(client: TestClient) -> None:
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "empty@qurany.app", "password": "secret12", "full_name": ""},
+    )
+    assert resp.status_code == 422
+
+
+def test_auth_me_requires_token(client: TestClient) -> None:
+    resp = client.get("/api/v1/auth/me")
+    assert resp.status_code == 401
+    assert "detail" in resp.json()

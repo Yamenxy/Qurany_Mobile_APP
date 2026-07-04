@@ -17,11 +17,6 @@ class RecitationApiException implements Exception {
 }
 
 /// Client for the Qurany FastAPI backend (transcription + recitation analysis).
-///
-/// The backend transcribes recorded audio with faster-whisper and aligns it
-/// against the canonical Surah text, returning the same result shape the app
-/// already builds on-device. When the backend is unavailable, callers should
-/// fall back to the on-device comparison path.
 class RecitationApiService {
   final String? _baseUrlOverride;
   final http.Client _client;
@@ -30,15 +25,12 @@ class RecitationApiService {
       : _baseUrlOverride = baseUrl,
         _client = client ?? http.Client();
 
-  /// Resolved per call (not frozen at construction) so an address saved in
-  /// Settings takes effect immediately without recreating the provider.
+  /// Resolved per call so an address saved in Settings takes effect immediately.
   String get baseUrl => _baseUrlOverride ?? AppConstants.recitationApiBaseUrl;
 
-  /// Whether the surah is handled by the backend (MVP: Surah Al-Naba only).
   bool supportsSurah(int surahNumber) =>
       AppConstants.serverSupportedSurahs.contains(surahNumber);
 
-  /// Quick health probe used to decide between server and on-device analysis.
   Future<bool> isHealthy({Duration timeout = const Duration(seconds: 3)}) async {
     try {
       final resp = await _client
@@ -52,18 +44,15 @@ class RecitationApiService {
     }
   }
 
-  /// Upload a recorded audio file for transcription + comparison.
-  ///
-  /// Returns the analysis result map with the same keys the on-device path
-  /// produces: `transcribed_text`, `reference_text`, `similarity_score`,
-  /// `total_words`, `matched_words`, `mistakes`, `errors`, `segments`.
+  /// Full AI pipeline: audio -> Whisper ASR -> alignment -> harakat/tajweed.
   Future<Map<String, dynamic>> analyzeRecitation({
     required String audioFilePath,
     required int surahNumber,
     String riwayah = 'hafs',
     int? startAyah,
     int? endAyah,
-    Duration timeout = const Duration(seconds: 90),
+    bool autoDetectAyahRange = true,
+    Duration timeout = const Duration(seconds: 180),
   }) async {
     final file = File(audioFilePath);
     if (!await file.exists()) {
@@ -75,14 +64,19 @@ class RecitationApiService {
       AppConstants.apiUri(baseUrl, '/api/v1/analyze'),
     )
       ..fields['surah_number'] = surahNumber.toString()
-      ..fields['riwayah'] = riwayah
-      ..files.add(await http.MultipartFile.fromPath('file', audioFilePath));
+      ..fields['riwayah'] = riwayah;
+
     if (startAyah != null) {
       request.fields['start_ayah'] = startAyah.toString();
     }
     if (endAyah != null) {
       request.fields['end_ayah'] = endAyah.toString();
     }
+    if (startAyah == null && autoDetectAyahRange) {
+      request.fields['auto_detect_ayah_range'] = 'true';
+    }
+
+    request.files.add(await http.MultipartFile.fromPath('file', audioFilePath));
 
     try {
       final streamed = await _client.send(request).timeout(timeout);
@@ -101,10 +95,6 @@ class RecitationApiService {
     }
   }
 
-  /// Compare an already-transcribed text against the surah reference.
-  ///
-  /// Useful as a lightweight path (e.g. sending the on-device speech-to-text
-  /// transcript to the server for consistent alignment/scoring).
   Future<Map<String, dynamic>> analyzeText({
     required int surahNumber,
     required String transcribedText,
@@ -149,18 +139,24 @@ class RecitationApiService {
 }
 
 /// Convenience: log + swallow errors, returning null so the caller can fall
-/// back to the on-device path.
+/// back to the on-device path (tahfeez per-ayah tashkeel).
 extension SafeRecitationApi on RecitationApiService {
   Future<Map<String, dynamic>?> tryAnalyzeRecitation({
     required String audioFilePath,
     required int surahNumber,
     String riwayah = 'hafs',
+    int? startAyah,
+    int? endAyah,
   }) async {
     try {
       return await analyzeRecitation(
         audioFilePath: audioFilePath,
         surahNumber: surahNumber,
         riwayah: riwayah,
+        startAyah: startAyah,
+        endAyah: endAyah,
+        autoDetectAyahRange: startAyah == null,
+        timeout: const Duration(seconds: 90),
       );
     } catch (e) {
       debugPrint('Server recitation analysis failed, using on-device: $e');

@@ -23,6 +23,8 @@ class RecitationSession {
   final double? harakatScore;
   final int harakatMistakes;
   final int harakatChecked;
+  final String? riwayah;
+  final List<TajweedNote> tajweedNotes;
 
   RecitationSession({
     required this.id,
@@ -42,6 +44,8 @@ class RecitationSession {
     this.harakatScore,
     this.harakatMistakes = 0,
     this.harakatChecked = 0,
+    this.riwayah,
+    this.tajweedNotes = const [],
   }) : sync = sync ?? SyncMetadata.fresh();
 
   RecitationSession copyWith({
@@ -50,6 +54,8 @@ class RecitationSession {
     double? harakatScore,
     int? harakatMistakes,
     int? harakatChecked,
+    String? riwayah,
+    List<TajweedNote>? tajweedNotes,
   }) {
     return RecitationSession(
       id: id,
@@ -69,6 +75,8 @@ class RecitationSession {
       harakatScore: harakatScore ?? this.harakatScore,
       harakatMistakes: harakatMistakes ?? this.harakatMistakes,
       harakatChecked: harakatChecked ?? this.harakatChecked,
+      riwayah: riwayah ?? this.riwayah,
+      tajweedNotes: tajweedNotes ?? this.tajweedNotes,
     );
   }
 
@@ -98,6 +106,11 @@ class RecitationSession {
           : (json['harakatScore'] as num).toDouble(),
       harakatMistakes: json['harakatMistakes'] ?? 0,
       harakatChecked: json['harakatChecked'] ?? 0,
+      riwayah: json['riwayah'] as String?,
+      tajweedNotes: (json['tajweedNotes'] as List?)
+              ?.map((e) => TajweedNote.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
   }
 
@@ -119,7 +132,58 @@ class RecitationSession {
         'harakatScore': harakatScore,
         'harakatMistakes': harakatMistakes,
         'harakatChecked': harakatChecked,
+        'riwayah': riwayah,
+        'tajweedNotes': tajweedNotes.map((n) => n.toJson()).toList(),
       };
+}
+
+class TajweedNote {
+  final String type;
+  final String expectedWord;
+  final int wordIndex;
+  final String message;
+  final String severity;
+
+  const TajweedNote({
+    required this.type,
+    required this.expectedWord,
+    required this.wordIndex,
+    required this.message,
+    this.severity = 'warning',
+  });
+
+  factory TajweedNote.fromJson(Map<String, dynamic> json) {
+    return TajweedNote(
+      type: json['type'] ?? '',
+      expectedWord: json['expectedWord'] ?? json['expected_word'] ?? '',
+      wordIndex: json['wordIndex'] ?? json['word_index'] ?? 0,
+      message: json['message'] ?? '',
+      severity: json['severity'] ?? 'warning',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'expectedWord': expectedWord,
+        'wordIndex': wordIndex,
+        'message': message,
+        'severity': severity,
+      };
+
+  String get typeArabic {
+    switch (type) {
+      case 'madd':
+        return 'مد';
+      case 'ghunnah':
+        return 'غنة';
+      case 'waqf':
+        return 'وقف';
+      case 'qalqalah':
+        return 'قلقلة';
+      default:
+        return type;
+    }
+  }
 }
 
 class RecitationError {

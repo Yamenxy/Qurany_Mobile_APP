@@ -164,4 +164,33 @@ class AuthService extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  /// Validates stored JWT against the backend and refreshes profile from the database.
+  Future<bool> refreshSessionIfLoggedIn() async {
+    if (!_isLoggedIn || _isGuest || _accessToken == null) {
+      return _isLoggedIn;
+    }
+
+    final me = await _authApi.me(token: _accessToken!);
+    if (me == null) {
+      await logout();
+      return false;
+    }
+
+    await _saveProfile(
+      UserProfile(
+        id: me['id'] as String?,
+        email: me['email'] as String? ?? '',
+        fullName: me['full_name'] as String? ?? '',
+        dailyStreak: me['daily_streak'] as int? ?? 0,
+        totalScore: me['total_score'] as int? ?? 0,
+        sync: SyncMetadata(
+          updatedAt: DateTime.now(),
+          syncStatus: SyncStatus.synced,
+        ),
+      ),
+    );
+    notifyListeners();
+    return true;
+  }
 }

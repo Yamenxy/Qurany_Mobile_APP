@@ -43,9 +43,13 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (!mounted) return;
       final auth = context.read<AuthService>();
+      if (auth.isLoggedIn && !auth.isGuest) {
+        await auth.refreshSessionIfLoggedIn();
+      }
+      if (!mounted) return;
       if (auth.isLoggedIn) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       } else {

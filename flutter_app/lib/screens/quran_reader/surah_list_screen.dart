@@ -4,6 +4,7 @@ import '../../config/theme.dart';
 import '../../config/routes.dart';
 import '../../config/constants.dart';
 import '../../services/qiraat_service.dart';
+import '../../utils/recitation_modes.dart';
 import '../../widgets/app_icons.dart';
 
 class SurahListScreen extends StatefulWidget {
@@ -44,8 +45,16 @@ class _SurahListScreenState extends State<SurahListScreen> {
     final qiraatService = context.watch<QiraatService>();
     final isBazzi = qiraatService.selectedQiraat == 'البزي';
 
-    // Al-Bazzi: only Surah Al-Baqara (index 1) is available
-    final allIndices = isBazzi ? [1] : List.generate(114, (i) => i);
+    List<int> allIndices;
+    if (_recitationMode == RecitationModes.aiAnalysis) {
+      allIndices = AppConstants.serverSupportedSurahs
+          .map((n) => n - 1)
+          .toList();
+    } else if (isBazzi) {
+      allIndices = [1];
+    } else {
+      allIndices = List.generate(114, (i) => i);
+    }
 
     if (_searchQuery.isEmpty) {
       return allIndices;

@@ -34,6 +34,7 @@ import 'services/learning_plan_service.dart';
 
 import 'services/khatmah_service.dart';
 
+import 'services/al_bazzi_service.dart';
 import 'services/qiraat_service.dart';
 
 import 'services/prayer_times_service.dart';
@@ -114,6 +115,8 @@ class QuranyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => QiraatService(prefs)),
 
         ChangeNotifierProvider(create: (_) => PrayerTimesService(prefs)),
+
+        Provider(create: (_) => AlBazziService()),
 
         Provider(
 

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/theme.dart';
 import '../../config/constants.dart';
 import '../../services/auth_service.dart';
+import '../../services/qiraat_service.dart';
 import '../../services/recitation_api_service.dart';
 import '../../widgets/app_icons.dart';
 
@@ -113,6 +114,32 @@ class SettingsScreen extends StatelessWidget {
           // be editable on the device rather than baked into the APK).
           const _SectionHeader(title: 'خادم التحليل'),
           const _ServerAddressCard(),
+          const SizedBox(height: 12),
+          Card(
+            child: Consumer<QiraatService>(
+              builder: (context, qiraat, _) => ListTile(
+                leading: const Icon(Icons.menu_book_outlined,
+                    color: QuranyTheme.primaryGreen),
+                title: const Text('القراءة للتحليل بالذكاء الاصطناعي'),
+                subtitle: Text(
+                  qiraat.isBazzi
+                      ? 'البزي (سورة البقرة)'
+                      : 'حفص',
+                ),
+                trailing: DropdownButton<String>(
+                  value: qiraat.selectedQiraat,
+                  underline: const SizedBox.shrink(),
+                  items: const [
+                    DropdownMenuItem(value: 'حفص', child: Text('حفص')),
+                    DropdownMenuItem(value: 'البزي', child: Text('البزي')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) qiraat.setQiraat(v);
+                  },
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
 
           // Supervised by

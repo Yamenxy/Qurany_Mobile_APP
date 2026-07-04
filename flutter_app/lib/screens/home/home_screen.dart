@@ -16,6 +16,7 @@ import '../../services/prayer_times_service.dart';
 import '../../widgets/app_icons.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/prayer_times_banner.dart';
+import '../../utils/recitation_modes.dart';
 import '../quran_reader/surah_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -1401,16 +1402,37 @@ class _MushafMuallimTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Free Learning
+            // Free Learning (live correction on device)
             _RecitationModeCard(
               icon: Icons.mic_rounded,
               title: 'تعلم حر',
-              description: 'اختر أي سورة وتلاوتها بدون تتبع في الخطة',
+              description: 'تلاوة حية مع تصحيح فوري على الجهاز',
               color: const Color(0xFFF57C00),
               onTap: () => Navigator.pushNamed(
                 context,
                 AppRoutes.surahList,
-                arguments: {'selectForRecitation': true, 'mode': 'tahfeez'},
+                arguments: {
+                  'selectForRecitation': true,
+                  'mode': RecitationModes.liveTahfeez,
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // AI analysis (backend Whisper + harakat + qira'a)
+            _RecitationModeCard(
+              icon: Icons.smart_toy_rounded,
+              title: 'تحليل بالذكاء الاصطناعي',
+              description:
+                  'سجّل تلاوتك ثم حلّلها على الخادم (حفص/بزي، حركات، تجويد)',
+              color: const Color(0xFF2E7D32),
+              onTap: () => Navigator.pushNamed(
+                context,
+                AppRoutes.surahList,
+                arguments: {
+                  'selectForRecitation': true,
+                  'mode': RecitationModes.aiAnalysis,
+                },
               ),
             ),
           ],

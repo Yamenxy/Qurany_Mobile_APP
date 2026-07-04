@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class QiraatService extends ChangeNotifier {
   static const String _storageKey = 'selected_qiraat';
   final SharedPreferences _prefs;
-  
+
   String _selectedQiraat = 'حفص';
 
   QiraatService(this._prefs) {
@@ -17,6 +17,11 @@ class QiraatService extends ChangeNotifier {
 
   /// Backend `/api/v1/analyze` riwayah query value.
   String get riwayah => isBazzi ? 'bazzi' : 'hafs';
+
+  /// Alias used by AI analysis wiring.
+  String get backendRiwayah => riwayah;
+
+  bool get isBazziSelected => isBazzi;
 
   /// Map UI qira'a label to backend riwayah id.
   static String riwayahFromQiraat(String qiraat) =>
